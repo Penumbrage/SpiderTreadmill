@@ -1,5 +1,6 @@
 # Script used to test the Adafruit Bonnet motor driver
-# NOTE: 
+# NOTE: This script includes code for both the DC motor and stepper motors
+# Comment out the right script for any tests
 
 # import relevant libraries
 import time
