@@ -30,9 +30,9 @@ from adafruit_motorkit import MotorKit
 # Create motor driver object
 kit = MotorKit(i2c=board.I2C())
 
-# Step 100 steps
+# Step 1000 steps
 for i in range(1000):
     position = kit.stepper1.onestep()
-    time.sleep(0.01)
+    time.sleep(0.001)     # NOTE: this command dictates the speed at which the steps are executed
     print(position)
 #--------------------------------------------#
