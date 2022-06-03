@@ -17,6 +17,13 @@ time.sleep(0.5)
 
 # stop the motor
 kit.motor1.throttle = 0
+
+# run motor at 3/10 speed for 10 seconds
+kit.motor1.throttle = 0.30
+time.sleep(10)
+
+# stop the motor
+kit.motor1.throttle = 0
 #-------------------------------------#
 
 # TODO: Include the stepper motor test code 
