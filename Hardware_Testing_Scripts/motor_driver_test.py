@@ -36,3 +36,5 @@ for i in range(1000):
     time.sleep(0.001)     # NOTE: this command dictates the speed at which the steps are executed
     print(position)
 #--------------------------------------------#
+
+#TODO: Figure out how to increase the speed of rotation
