@@ -8,22 +8,31 @@ import board
 from adafruit_motorkit import MotorKit
 
 #----- Code for the DC motor ---------#
-# create driver object
-kit = MotorKit(i2c=board.I2C())
+# # create driver object
+# kit = MotorKit(i2c=board.I2C())
 
-# run motor at full speed for 0.5 seconds
-kit.motor1.throttle = 1.0
-time.sleep(0.5)
+# # run motor at full speed for 0.5 seconds
+# kit.motor1.throttle = 1.0
+# time.sleep(0.5)
 
-# stop the motor
-kit.motor1.throttle = 0
+# # stop the motor
+# kit.motor1.throttle = 0
 
-# run motor at 3/10 speed for 10 seconds
-kit.motor1.throttle = 0.30
-time.sleep(10)
+# # run motor at 3/10 speed for 10 seconds
+# kit.motor1.throttle = 0.30
+# time.sleep(10)
 
-# stop the motor
-kit.motor1.throttle = 0
+# # stop the motor
+# kit.motor1.throttle = 0
 #-------------------------------------#
 
-# TODO: Include the stepper motor test code 
+#----------Code for the stepper motor--------#
+# Create motor driver object
+kit = MotorKit(i2c=board.I2C())
+
+# Step 100 steps
+for i in range(1000):
+    position = kit.stepper1.onestep()
+    time.sleep(0.01)
+    print(position)
+#--------------------------------------------#
