@@ -1,0 +1,3 @@
+[submodule "Hardware_Testing_Scripts/single-tb9051ftg-motor-driver-rpi"]
+	path = Hardware_Testing_Scripts/single-tb9051ftg-motor-driver-rpi
+	url = https://github.com/Penumbrage/single-tb9051ftg-motor-driver-rpi.git

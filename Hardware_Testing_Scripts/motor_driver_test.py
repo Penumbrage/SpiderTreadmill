@@ -6,6 +6,7 @@
 import time
 import board
 from adafruit_motorkit import MotorKit
+from adafruit_motor import stepper
 
 #----- Code for the DC motor ---------#
 # # create driver object
@@ -31,9 +32,9 @@ from adafruit_motorkit import MotorKit
 kit = MotorKit(i2c=board.I2C())
 
 # Step 1000 steps
-for i in range(1000):
-    position = kit.stepper1.onestep()
-    time.sleep(0.001)     # NOTE: this command dictates the speed at which the steps are executed
+for i in range(15*2048):
+    position = kit.stepper1.onestep(direction=stepper.FORWARD, style=stepper.SINGLE)
+    # time.sleep(0.001)     # NOTE: this command dictates the speed at which the steps are executed
     print(position)
 #--------------------------------------------#
 
