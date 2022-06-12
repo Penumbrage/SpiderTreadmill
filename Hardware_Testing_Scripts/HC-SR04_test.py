@@ -14,6 +14,12 @@ GPIO_ECHO = 24
 #set GPIO direction (IN / OUT)
 GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
 GPIO.setup(GPIO_ECHO, GPIO.IN)
+print("Pin Setup Complete")
+
+# make sure trigger is set to low
+GPIO.output(GPIO_TRIGGER, False)
+print("Waiting for sensor to settle")
+time.sleep(2)
  
 def distance():
     # set Trigger to HIGH
@@ -22,6 +28,7 @@ def distance():
     # set Trigger after 0.01ms to LOW
     time.sleep(0.00001)
     GPIO.output(GPIO_TRIGGER, False)
+    print("Trigger Successful")
  
     StartTime = time.time()
     StopTime = time.time()
@@ -29,10 +36,14 @@ def distance():
     # save StartTime
     while GPIO.input(GPIO_ECHO) == 0:
         StartTime = time.time()
+
+    print("Start Time Saved")
  
     # save time of arrival
     while GPIO.input(GPIO_ECHO) == 1:
         StopTime = time.time()
+
+    print("Stop Time Saved")
  
     # time difference between start and arrival
     TimeElapsed = StopTime - StartTime
