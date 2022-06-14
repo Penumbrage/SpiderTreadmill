@@ -27,7 +27,9 @@ try:
     while True:
         if GPIO.input(PIR_pin) == True: #If PIR pin goes high, motion is detected
             print (counter, "Motion Detected!")
+            counter = counter + 1
             time.sleep(10)       # wait until the high signal stops before registering another motion detection
+            print("Sensor ready for another reading")
             # GPIO.output(led, True) #Turn on LED
             # time.sleep(4) #Keep LED on for 4 seconds
             # GPIO.output(led, False) #Turn off LED
