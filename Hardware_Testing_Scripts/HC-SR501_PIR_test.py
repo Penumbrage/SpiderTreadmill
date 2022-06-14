@@ -21,9 +21,13 @@ print ("Press Ctrl+c to end program")
 
 # The main execution loop for the sensor
 try:
+    # counter to keep track of number of motions detected
+    counter = 0
+
     while True:
         if GPIO.input(PIR_pin) == True: #If PIR pin goes high, motion is detected
-            print ("Motion Detected!")
+            print (counter, "Motion Detected!")
+            time.sleep(10)       # wait until the high signal stops before registering another motion detection
             # GPIO.output(led, True) #Turn on LED
             # time.sleep(4) #Keep LED on for 4 seconds
             # GPIO.output(led, False) #Turn off LED
