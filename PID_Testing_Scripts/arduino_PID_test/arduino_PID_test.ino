@@ -7,16 +7,22 @@
 // are used. Please use this code if your 
 // platform does not support ATOMIC_BLOCK.
 
-// Pins
-#define ENCA 2
-#define ENCB 3
-#define PWM 5
-#define IN1 6
-#define IN2 7
+// Encoder pins
+#define ENCA 15
+#define ENCB 19
+
+// Motor driver pins
+#define PWM1 2
+#define PWM2 3
+#define EN 4
+#define ENB 5
 
 // globals
 long prevT = 0;
 int posPrev = 0;
+float v1 = 0;
+float v2 = 0;
+
 // Use the "volatile" directive for variables
 // used in an interrupt
 volatile int pos_i = 0;
@@ -27,17 +33,24 @@ float v1Filt = 0;
 float v1Prev = 0;
 float v2Filt = 0;
 float v2Prev = 0;
+float uPrev = 0;
 
 float eintegral = 0;
 
 void setup() {
   Serial.begin(115200);
 
+  // label the pin modes
   pinMode(ENCA,INPUT);
   pinMode(ENCB,INPUT);
-  pinMode(PWM,OUTPUT);
-  pinMode(IN1,OUTPUT);
-  pinMode(IN2,OUTPUT);
+  pinMode(PWM1,OUTPUT);
+  pinMode(PWM2,OUTPUT);
+  pinMode(EN,OUTPUT);
+  pinMode(ENB,OUTPUT);
+
+  // enable the motor driver by default
+  digitalWrite(EN, 1);
+  digitalWrite(ENB, 0);
 
   attachInterrupt(digitalPinToInterrupt(ENCA),
                   readEncoder,RISING);
@@ -61,8 +74,17 @@ void loop() {
   prevT = currT;
 
   // Convert count/s to RPM
-  float v1 = velocity1/600.0*60.0;
-  float v2 = velocity2/600.0*60.0;
+  float temp_v1 = velocity1/116.16*60.0;
+  float temp_v2 = velocity2/116.16*60.0;
+
+  // Perform checks to ensure velocities are correct in magnitude
+  if (temp_v1 < 1100) {
+    v1 = temp_v1;
+  }
+
+  if (temp_v2 < 1100) {
+    v2 = temp_v2;
+  }
 
   // Low-pass filter (25 Hz cutoff)
   v1Filt = 0.854*v1Filt + 0.0728*v1 + 0.0728*v1Prev;
@@ -71,15 +93,17 @@ void loop() {
   v2Prev = v2;
 
   // Set a target
-  float vt = 100*(sin(currT/1e6)>0);
+  float vt = 1000*(sin(currT/5e6));
+//  float vt = 500;
 
   // Compute the control signal u
-  float kp = 5;
-  float ki = 10;
+  float kp = 0.01;
+  float ki = 0.0001;
   float e = vt-v1Filt;
   eintegral = eintegral + e*deltaT;
   
-  float u = kp*e + ki*eintegral;
+  float u = kp*e + ki*eintegral + uPrev;
+  uPrev = u;
 
   // Set the motor speed and direction
   int dir = 1;
@@ -90,31 +114,43 @@ void loop() {
   if(pwr > 255){
     pwr = 255;
   }
-  setMotor(dir,pwr,PWM,IN1,IN2);
+  setMotor(dir, pwr, PWM1, PWM2);
 
+//  Serial.println(dir);
+  Serial.print(pwr);
+  Serial.print(" ");
   Serial.print(vt);
   Serial.print(" ");
   Serial.print(v1Filt);
   Serial.println();
-  delay(1);
+  delay(50);
+
+//    // Code to test the motor function
+//    int pwr = 10/3.0*micros()/1.0e6;
+//    int dir = 1;
+//    setMotor(dir, pwr, PWM1, PWM2);
+//    Serial.println(pos);
+//    Serial.print(v1);
+//    Serial.print(" ");
+//    Serial.print(v2);
+//    Serial.println();
 }
 
-void setMotor(int dir, int pwmVal, int pwm, int in1, int in2){
-  analogWrite(pwm,pwmVal); // Motor speed
+void setMotor(int dir, int pwmVal, int pwmPin1, int pwmPin2){
   if(dir == 1){ 
     // Turn one way
-    digitalWrite(in1,HIGH);
-    digitalWrite(in2,LOW);
+    analogWrite(pwmPin1, pwmVal);
+    digitalWrite(pwmPin2, 0);
   }
   else if(dir == -1){
     // Turn the other way
-    digitalWrite(in1,LOW);
-    digitalWrite(in2,HIGH);
+    digitalWrite(pwmPin1, 0);
+    analogWrite(pwmPin2, pwmVal);
   }
   else{
     // Or dont turn
-    digitalWrite(in1,LOW);
-    digitalWrite(in2,LOW);    
+    digitalWrite(pwmPin1, 0);
+    digitalWrite(pwmPin2, 0);    
   }
 }
 
@@ -123,15 +159,16 @@ void readEncoder(){
   int b = digitalRead(ENCB);
   int increment = 0;
   if(b>0){
-    // If B is high, increment forward
-    increment = 1;
-  }
-  else{
-    // Otherwise, increment backward
+    // If B is HIGH, increment backward
     increment = -1;
   }
+  else{
+    // Otherwise, increment forward
+    increment = 1;
+  }
   pos_i = pos_i + increment;
-
+//  Serial.println(pos_i);
+  
   // Compute velocity with method 2
   long currT = micros();
   float deltaT = ((float) (currT - prevT_i))/1.0e6;
