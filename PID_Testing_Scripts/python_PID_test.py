@@ -21,7 +21,7 @@ GPIO.setup(ENCB, GPIO.IN)
 # Create global variables required for the script
 pos_i = 0                       # variable that stores the encoder position from the interrupt function
 pos_prev = 0                    # variable that stores the previous position of the motor shaft (used to calculate motor vel)
-time_prev = time.time()         # variable that stores the previous time for the motor speed calculation
+time_prev = time.perf_counter() # variable that stores the previous time for the motor speed calculation
 deltaT = 0                      # variable that stores the difference in time between two executions of the motor velocity calculation function
 err_prev = 0                    # variable that stores the error from the previous iteration of PID function (used for the integral and derivative terms)
 err_sum = 0                     # variable that stores the integral sum of the error for the integral term of the PID
@@ -33,7 +33,7 @@ def calcMotorVelocity():
 
     # calculate motor velocity (in counts/second)
     pos_curr = pos_i
-    time_curr = time.time()
+    time_curr = time.perf_counter()
     deltaT = time_curr - time_prev
     velocity = (pos_curr - pos_prev)/deltaT
 
