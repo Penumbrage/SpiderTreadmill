@@ -19,13 +19,17 @@ GPIO.setup(ENCA, GPIO.IN)
 GPIO.setup(ENCB, GPIO.IN)
 
 # Create global variables required for the script
-pos_i = 0           # variable that stores the encoder position from the interrupt function
-pos_prev = 0        # variable that stores the previous position of the motor shaft (used to calculate motor vel)
-time_prev = time.time()       # variable that stores the previous time for the motor speed calculation
+pos_i = 0                       # variable that stores the encoder position from the interrupt function
+pos_prev = 0                    # variable that stores the previous position of the motor shaft (used to calculate motor vel)
+time_prev = time.time()         # variable that stores the previous time for the motor speed calculation
+deltaT = 0                      # variable that stores the difference in time between two executions of the motor velocity calculation function
+err_prev = 0                    # variable that stores the error from the previous iteration of PID function (used for the integral and derivative terms)
+err_sum = 0                     # variable that stores the integral sum of the error for the integral term of the PID
+u_prev = 0                      # variable that stores the previous control signal sent to the motor (used to generate new control signal)         
 
 # Create function to calculate the motor velocity
 def calcMotorVelocity():
-    global pos_prev, pos_i, time_prev
+    global pos_prev, pos_i, time_prev, deltaT
 
     # calculate motor velocity (in counts/second)
     pos_curr = pos_i
@@ -43,13 +47,29 @@ def calcMotorVelocity():
     return velocity
 
 # Create function to execute the PID controller
-def motorPID():
-    global 
+def motorPID(desired_vel, meas_vel):
+    global err_prev, err_sum, deltaT, u_prev
 
     # tuning constants
     k_p = 0.01
     k_i = 0.0001
     k_d = 0
+
+    # calculate the current error between the desired and measured motor speeds
+    err = desired_vel - meas_vel
+
+    # calculate the sum of the error for the integral term for the PID
+    err_sum = err_sum + (1/2)*(err + err_prev)*deltaT
+
+    # calculate the change in error for the derivative term for the PID
+    deltaErr = err - err_prev
+
+    # calculate the control signal
+    u = k_p*err + k_i*err_sum + k_d*(deltaErr/deltaT) + u_prev
+
+    # update required global variables for the next iteration of the loop
+    err_prev = err
+    u_prev = u
 
     return u
 
@@ -84,20 +104,24 @@ def raiseIfFault():
 # Main execution loop for the motor
 if __name__ == '__main__':
     try:
+        
+        # set the desired speed of the motor in RPM
+        speed_des = 500
+
         while True:
             raiseIfFault()
-            motors.motor1.setSpeed(MAX_SPEED/4)
+            # motors.motor1.setSpeed(MAX_SPEED/4)
             m_vel = calcMotorVelocity()
-            print(m_vel)
+            control_sig = motorPID(speed_des, m_vel)
+            motor1.setSpeed(control_sig)
+            print(speed_des, m_vel)
             time.sleep(0.1)
 
     except KeyboardInterrupt:
         print("Keyboard Interrupt")
-        motors.forceStop()
 
     except DriverFault as e:
         print("Driver %s fault!" % e.driver_num)
-        motors.forceStop()
 
     finally:
         print("Program Exited")
