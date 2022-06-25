@@ -51,8 +51,9 @@ def motorPID(desired_vel, meas_vel):
     global err_prev, err_sum, deltaT, u_prev
 
     # tuning constants
-    k_p = 0.01
-    k_i = 0.0001
+    # NOTE: from testing, it appears that having k_p as 0.1 as the only value works quite well
+    k_p = 0.1
+    k_i = 0
     k_d = 0
 
     # calculate the current error between the desired and measured motor speeds
@@ -104,9 +105,12 @@ def raiseIfFault():
 # Main execution loop for the motor
 if __name__ == '__main__':
     try:
-        
+
         # set the desired speed of the motor in RPM
-        speed_des = 500
+        speed_des = 60
+
+        # set counter that dictates how often information is printed to the terminal
+        print_counter = 0
 
         while True:
             raiseIfFault()
@@ -114,7 +118,9 @@ if __name__ == '__main__':
             m_vel = calcMotorVelocity()
             control_sig = motorPID(speed_des, m_vel)
             motor1.setSpeed(control_sig)
-            print(speed_des, m_vel)
+            if (print_counter % 10 == 0):
+                print(control_sig, "|", speed_des, "|", m_vel)
+            print_counter = print_counter + 1
             time.sleep(0.1)
 
     except KeyboardInterrupt:
