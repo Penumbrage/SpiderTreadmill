@@ -21,6 +21,10 @@ ENCB = 24
 GPIO.setup(ENCA, GPIO.IN)
 GPIO.setup(ENCB, GPIO.IN)
 
+# Define and set up pins for the break beam sensor
+BEAM_RECEIVER = 21
+GPIO.setup(BEAM_RECEIVER, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
 # Create a queue to pass user-defined treadmill speeds to the main thread
 q = queue.Queue()
 
@@ -33,6 +37,7 @@ err_prev = 0                    # variable that stores the error from the previo
 err_sum = 0                     # variable that stores the integral sum of the error for the integral term of the PID
 u_prev = 0                      # variable that stores the previous control signal sent to the motor (used to generate new control signal)
 speed_des = 0                   # variable that stores the desired speed from the user (default at 0 speed)
+user_changed_velocity = False   # boolean variable to check if the user changed the motor velocity
 
 # Create function to calculate the motor velocity
 def calcMotorVelocity():
@@ -91,6 +96,79 @@ def motorPID(desired_vel, meas_vel):
 
     return u
 
+# Function used to maintain the motor velocity if the user has not changed the velocity
+def maintainMotorVelocity():
+    global speed_des
+
+    # Read in the current motor velocity
+    curr_speed = calcMotorVelocity()
+
+    # generate a control signal using the PID function
+    control_sig = motorPID(speed_des, curr_speed)
+
+    # send the control signal to the motor
+    motor1.setSpeed(control_sig)
+
+    # let the motor respond to the signal and give some time for the encoder to count
+    time.sleep(0.1)
+
+    return control_sig, curr_speed
+
+# Function used to change the motor velocity based on the user input and current velocity
+def changeMotorVelocity(ramp_time):
+    global speed_des, user_changed_velocity
+
+    # NOTE: built into this function is the ability to "ramp" from the current velocity
+    #       to the desired velocity to provide smoother transitions between velocities
+    #       that also minimize strain of sharp fluctuations of speed on the motor and
+    #       the motor driver. This function is only called whenever there is a change in
+    #       the desired velocity. Otherwise, the main thread will be running the 
+    #       maintainMotorVelocity() function
+
+    # create variable that stores the time elapsed
+    time_elapsed = 0
+
+    # obtain the current starting velocity from the motor
+    start_speed = calcMotorVelocity()
+
+    # create variable that stores the current motor velocity
+    curr_speed = start_speed
+
+    # create a variable to store the speed to send to the PID loop
+    ramp_vel = 0
+
+    # determine the slope for the linear profile of the ramp signal
+    slope = (speed_des - start_speed)/ramp_time
+
+    # obtain the start time for the ramp signal
+    start_time = time.perf_counter()
+
+    # execute the ramp signal over the time_diff
+    while (time_elapsed <= ramp_time):
+        # calculate the ramp velocity to send to the PID loop
+        ramp_vel = slope*time_elapsed + start_speed      # standard y = mx + b linear equation
+
+        # send velocity to PID
+        control_sig = motorPID(ramp_vel, curr_speed)
+
+        # send the motor speed
+        motor1.setSpeed(control_sig)
+
+        # give some time for the motor to act (and for the encoder to have time to read new signals)
+        time.sleep(0.1)
+
+        # clock the time elaspsed
+        stop_time = time.perf_counter()
+        time_elapsed = stop_time - start_time
+
+        # obtain new speed for the motor
+        curr_speed = calcMotorVelocity()
+
+    user_changed_velocity = False
+    print("Ramp completed")
+
+    return control_sig, curr_speed           # return final control signal and motor velocity
+
 # Callback function for the encoder
 def readEncoder(channel):
     global pos_i
@@ -107,7 +185,7 @@ def readEncoder(channel):
 
     pos_i = pos_i + increment
 
-# Create interrupt to ENCA
+# Create interrupt for ENCA
 GPIO.add_event_detect(ENCA, GPIO.RISING, callback = readEncoder)
 
 # Create function running in child thread that waits for user inputs for speeds
@@ -126,11 +204,24 @@ def getUserInput(q):
                 print("The speed you entered is not within the specified range. Please enter a new speed.")
             else:
                 q.put(user_input)       # put the user-defined speed on the queue in m/s
-                print(f'Current desired speed updated to: {user_input} m/s')
 
         except ValueError:
             print("You did not enter a number in the correct format (check for any unwanted characters, spaces, etc).")
             print("Please enter your speed again.")
+
+# Create a function that reads the user input from the queue in the main thread and updates the speed_des variable
+def readUserInput():
+    global speed_des, q, user_changed_velocity
+
+    # determine the desired speed from the user (in m/s) and covert it to RPM
+    try:
+        speed_des = q.get(block=False)                  # False used to prevent code on waiting for info
+        print(f'Current desired speed updated to: {speed_des} m/s')
+        user_changed_velocity = True
+        speed_des = speed_des*(60/pi)/(2/39.3701)       # conversion to RPM
+
+    except queue.Empty:
+        pass
 
 # Define a custom exception to raise if a fault is detected.
 class DriverFault(Exception):
@@ -139,43 +230,51 @@ class DriverFault(Exception):
 
 def raiseIfFault():
     if motors.motor1.getFault():
-        raise DriverFault(1)
+        raise DriverFault(driver_num=1)
+
+# Custom class break beam exception
+class BeamFault(Exception):
+    def __init__(self, pin_num):
+        self.pin_num = pin_num
+
+# fault function function for the break beam sensor
+def raiseIfBeamBroken():
+    global BEAM_RECEIVER
+
+    # if the BEAM_RECEIVER pin is low, then the beam is broken
+    if not GPIO.input(BEAM_RECEIVER):
+        raise BeamFault(pin_num=BEAM_RECEIVER)
 
 # Main execution loop for the motor
 if __name__ == '__main__':
 
-     # set counter that dictates how often information is printed to the terminal
-    print_counter = 0
-
     # create a thread that runs the user input function (obtain user defined speeds)
     # NOTE: This is a daemon thread which allows the thread to be killed when the main program is killed,
     #       or else main thread will not be killed
-    user_in_thread = threading.Thread(target=getUserInput, args=(q,), daemon=True)
+    user_input_thread = threading.Thread(target=getUserInput, args=(q,), daemon=True)
 
     # start the user input thread
-    user_in_thread.start()
+    user_input_thread.start()
+
+    # counter for the print statements
+    print_counter = 0
 
     try:
         while True:
             # test for driver faults
             raiseIfFault()
 
-            # determine the desired speed from the user (in m/s) and covert it to RPM
-            try:
-                speed_des = q.get(block=False)               # False used to prevent code on waiting for info
-                speed_des = speed_des*(60/pi)/(2/39.3701)    # conversion to RPM
+            # test the break beam sensor so that it isn't broker
+            raiseIfBeamBroken()
 
-            except queue.Empty:
-                pass
+            # obtain user input for desired velocity if available from the queue
+            readUserInput()
 
-            # determine the motor velocity from encoder
-            m_vel = calcMotorVelocity()
-
-            # use PID function to determine speed to be sent to controller and set that speed
-            control_sig = motorPID(speed_des, m_vel)
-
-            # send the motor speed
-            motor1.setSpeed(control_sig)
+            # set the motor speed determined from user input and current motor speeds (ramping included)
+            if (user_changed_velocity == False):
+                control_sig, m_vel = maintainMotorVelocity()
+            else:
+                control_sig, m_vel = changeMotorVelocity(ramp_time=2)
 
             # print useful information about motor speeds
             if (print_counter % 10 == 0):
@@ -183,14 +282,23 @@ if __name__ == '__main__':
 
             print_counter = print_counter + 1
 
-            # pause the loop to ensure we are not aliasing the encoder readings
-            time.sleep(0.1)
-
     except KeyboardInterrupt:
         print("\nKeyboard Interrupt")
+        
+        # slow the motor down so that it does not stop abruptly
+        speed_des = 0
+        changeMotorVelocity(ramp_time=2)
 
     except DriverFault as e:
         print("Driver %s fault!" % e.driver_num)
+
+    except BeamFault as b:
+        print(f"IR sensor on pin {b.pin_num} is broken!")
+        print("Motor shutting down!")
+
+        # slow the motor down to a halt
+        speed_des = 0
+        changeMotorVelocity(ramp_time=2)
 
     finally:
         GPIO.cleanup()
