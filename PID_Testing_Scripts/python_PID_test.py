@@ -63,14 +63,24 @@ def motorPID(desired_vel, meas_vel):
     k_i = 0
     k_d = 0
 
-    # calculate the current error between the desired and measured motor speeds
-    err = desired_vel - meas_vel
+    # NOTE: there is a check for 0 m/s as an input speed because the PID will actually
+    #       never send a control signal of "0" and will waste energy sending a voltage
+    #       that is not enough to actually power the motor
+    if not (desired_vel == 0):
+        # calculate the current error between the desired and measured motor speeds
+        err = desired_vel - meas_vel
 
-    # calculate the sum of the error for the integral term for the PID
-    err_sum = err_sum + (1/2)*(err + err_prev)*deltaT
+        # calculate the sum of the error for the integral term for the PID
+        err_sum = err_sum + (1/2)*(err + err_prev)*deltaT
 
-    # calculate the change in error for the derivative term for the PID
-    deltaErr = err - err_prev
+        # calculate the change in error for the derivative term for the PID
+        deltaErr = err - err_prev
+    else:
+        # here, we set the errors and previous control signal to zero so that we send a command of u = 0
+        err = 0
+        err_sum = 0
+        deltaErr = 0
+        u_prev = 0
 
     # calculate the control signal
     u = k_p*err + k_i*err_sum + k_d*(deltaErr/deltaT) + u_prev
@@ -118,7 +128,6 @@ def getUserInput(q):
                 q.put(user_input)       # put the user-defined speed on the queue in m/s
                 print(f'Current desired speed updated to: {user_input} m/s')
 
-
         except ValueError:
             print("You did not enter a number in the correct format (check for any unwanted characters, spaces, etc).")
             print("Please enter your speed again.")
@@ -162,14 +171,8 @@ if __name__ == '__main__':
             # determine the motor velocity from encoder
             m_vel = calcMotorVelocity()
 
-            # use PID function to determine speed to be sent to controller and set that speed 
-            # NOTE: there is a check for 0 m/s as an input speed because the PID will actually
-            #       never send a control signal of "0" and will waste energy sending a voltage
-            #       that is not enough to actually power the motor
-            if not (speed_des == 0):
-                control_sig = motorPID(speed_des, m_vel)
-            else:
-                control_sig = 0
+            # use PID function to determine speed to be sent to controller and set that speed
+            control_sig = motorPID(speed_des, m_vel)
 
             # send the motor speed
             motor1.setSpeed(control_sig)
