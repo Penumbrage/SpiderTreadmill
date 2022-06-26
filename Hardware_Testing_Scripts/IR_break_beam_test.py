@@ -18,17 +18,19 @@ GPIO.setup(BEAM_RECEIVER, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 try:
     while True:
         # read the state of the receiver
-        beam_state = GPIO.read(BEAM_RECEIVER)
+        beam_state = GPIO.input(BEAM_RECEIVER)
 
         # if the receiver is LOW, then the beam is broken
         if beam_state == False:
             print("The beam is broken!")
+        else:
+            print("The beam is fine!")
 
         # wait 1 second before reading another time
-        time.sleep(1)
+        time.sleep(2)
 
 except KeyboardInterrupt:
-    print("Keyboard Interrupt ... Exiting")
+    print("\nKeyboard Interrupt ... Exiting")
 
 finally:
     print("Exited")
