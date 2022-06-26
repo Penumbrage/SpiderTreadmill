@@ -38,13 +38,15 @@ err_sum = 0                     # variable that stores the integral sum of the e
 u_prev = 0                      # variable that stores the previous control signal sent to the motor (used to generate new control signal)
 speed_des = 0                   # variable that stores the desired speed from the user (default at 0 speed)
 user_changed_velocity = False   # boolean variable to check if the user changed the motor velocity
+enc_lock = threading.Lock()     # create a lock for the pos_i variable so that the encoder and main thread are not racing
 
 # Create function to calculate the motor velocity
 def calcMotorVelocity():
-    global pos_prev, pos_i, time_prev, deltaT
+    global pos_prev, pos_i, time_prev, deltaT, enc_lock
 
     # calculate motor velocity (in counts/second)
-    pos_curr = pos_i
+    with enc_lock:
+        pos_curr = pos_i        # only read pos_i with the lock
     time_curr = time.perf_counter()
     deltaT = time_curr - time_prev
     velocity = (pos_curr - pos_prev)/deltaT
@@ -171,7 +173,7 @@ def changeMotorVelocity(ramp_time):
 
 # Callback function for the encoder
 def readEncoder(channel):
-    global pos_i
+    global pos_i, enc_lock
 
     # read ENCB when ENCA has been triggered with a rising signal
     b = GPIO.input(ENCB)
@@ -183,7 +185,9 @@ def readEncoder(channel):
         # if ENCB is LOW when ENCA is HIGH, motor is moving in the positive (CW) direction
         increment = 1
 
-    pos_i = pos_i + increment
+    # only write to the pos_i variable when lock is available
+    with enc_lock:
+        pos_i = pos_i + increment
 
 # Create interrupt for ENCA
 GPIO.add_event_detect(ENCA, GPIO.RISING, callback = readEncoder)
