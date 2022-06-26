@@ -116,36 +116,51 @@ def changeMotorVelocity():
     #       that also minimize strain of sharp fluctuations of speed on the motor and
     #       the motor driver
 
-    # number of loop iterations for the ramp signal
-    iter = 10
+    # create a variable that stores the time over which the ramps signal should occur (in seconds)
+    ramp_time = 2
 
-    # obtain the current velocity from the motor
-    m_vel = calcMotorVelocity()
+    # create variable that stores the time elapsed
+    time_elapsed = 0
 
-    # create a variable to store the ramp speed in the loop (starts at the current speed)
-    ramp_vel = m_vel
+    # obtain the current starting velocity from the motor
+    start_speed = calcMotorVelocity()
 
-    # determine the increment for the ramp for a loop of 10 iterations
-    signal_increment = (speed_des - m_vel)/iter
+    # create variable that stores the current motor velocity
+    curr_speed = start_speed
 
-    # ramp the function from the current m_vel to the desired velocity via a for loop
-    for i in range(iter):
-        # obtain the ramp velocities
-        ramp_vel = ramp_vel + signal_increment
+    # create a variable to store the speed to send to the PID loop
+    ramp_vel = 0
 
-        # use PID function to determine speed to be sent to controller and set that speed
-        control_sig = motorPID(ramp_vel, m_vel)
+    # determine the slope for the linear profile of the ramp signal
+    slope = (speed_des - start_speed)/ramp_time
+
+    # obtain the start time for the ramp signal
+    start_time = time.perf_counter()
+
+    # execute the ramp signal over the time_diff
+    while (time_elapsed <= ramp_time):
+        # calculate the ramp velocity to send to the PID loop
+        ramp_vel = slope*time_elapsed + start_speed      # standard y = mx + b linear equation
+
+        # send velocity to PID
+        control_sig = motorPID(ramp_vel, curr_speed)
 
         # send the motor speed
         motor1.setSpeed(control_sig)
 
-        # wait for the motor to react to the control signal
+        # give some time for the motor to act (and for the encoder to have time to read new signals)
         time.sleep(0.1)
 
-        # reobtain the current speed of the motor for the next iteration of the loop
-        m_vel = calcMotorVelocity()
+        # clock the time elaspsed
+        stop_time = time.perf_counter()
+        time_elapsed = stop_time - start_time
 
-    return control_sig, m_vel           # return final control signal and motor velocity
+        # obtain new speed for the motor
+        curr_speed = calcMotorVelocity()
+
+    print("Ramp completed")
+
+    return control_sig, curr_speed           # return final control signal and motor velocity
 
 # Create interrupt to ENCA
 GPIO.add_event_detect(ENCA, GPIO.RISING, callback = readEncoder)
