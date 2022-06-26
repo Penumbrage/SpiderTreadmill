@@ -242,6 +242,9 @@ if __name__ == '__main__':
     # start the user input thread
     user_input_thread.start()
 
+    # counter for the print statements
+    print_counter = 0
+
     try:
         while True:
             # test for driver faults
@@ -257,10 +260,17 @@ if __name__ == '__main__':
                 control_sig, m_vel = changeMotorVelocity()
 
             # print useful information about motor speeds
-            print(control_sig, "|", speed_des, "|", m_vel)
+            if (print_counter % 10 == 0):
+                print(control_sig, "|", speed_des, "|", m_vel)
+
+            print_counter = print_counter + 1
 
     except KeyboardInterrupt:
         print("\nKeyboard Interrupt")
+        
+        # slow the motor down so that it does not stop abruptly
+        speed_des = 0
+        changeMotorVelocity()
 
     except DriverFault as e:
         print("Driver %s fault!" % e.driver_num)
