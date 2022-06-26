@@ -33,6 +33,7 @@ err_prev = 0                    # variable that stores the error from the previo
 err_sum = 0                     # variable that stores the integral sum of the error for the integral term of the PID
 u_prev = 0                      # variable that stores the previous control signal sent to the motor (used to generate new control signal)
 speed_des = 0                   # variable that stores the desired speed from the user (default at 0 speed)
+user_changed_velocity = False   # boolean variable to check if the user changed the motor velocity
 
 # Create function to calculate the motor velocity
 def calcMotorVelocity():
@@ -107,14 +108,34 @@ def readEncoder(channel):
 
     pos_i = pos_i + increment
 
-# function used to change the motor velocity based on the user input and current velocity
-def changeMotorVelocity():
+# Function used to maintain the motor velocity if the user has not changed the velocity
+def maintainMotorVelocity():
     global speed_des
+
+    # Read in the current motor velocity
+    curr_speed = calcMotorVelocity()
+
+    # generate a control signal using the PID function
+    control_sig = motorPID(speed_des, curr_speed)
+
+    # send the control signal to the motor
+    motor1.setSpeed(control_sig)
+
+    # let the motor respond to the signal and give some time for the encoder to count
+    time.sleep(0.1)
+
+    return control_sig, curr_speed
+
+# Function used to change the motor velocity based on the user input and current velocity
+def changeMotorVelocity():
+    global speed_des, user_changed_velocity
 
     # NOTE: built into this function is the ability to "ramp" from the current velocity
     #       to the desired velocity to provide smoother transitions between velocities
     #       that also minimize strain of sharp fluctuations of speed on the motor and
-    #       the motor driver
+    #       the motor driver. This function is only called whenever there is a change in
+    #       the desired velocity. Otherwise, the main thread will be running the 
+    #       maintainMotorVelocity() function
 
     # create a variable that stores the time over which the ramps signal should occur (in seconds)
     ramp_time = 2
@@ -158,6 +179,7 @@ def changeMotorVelocity():
         # obtain new speed for the motor
         curr_speed = calcMotorVelocity()
 
+    user_changed_velocity = False
     print("Ramp completed")
 
     return control_sig, curr_speed           # return final control signal and motor velocity
@@ -181,7 +203,6 @@ def getUserInput(q):
                 print("The speed you entered is not within the specified range. Please enter a new speed.")
             else:
                 q.put(user_input)       # put the user-defined speed on the queue in m/s
-                print(f'Current desired speed updated to: {user_input} m/s')
 
         except ValueError:
             print("You did not enter a number in the correct format (check for any unwanted characters, spaces, etc).")
@@ -189,11 +210,13 @@ def getUserInput(q):
 
 # Create a function that reads the user input from the queue in the main thread and updates the speed_des variable
 def readUserInput():
-    global speed_des, q
+    global speed_des, q, user_changed_velocity
 
     # determine the desired speed from the user (in m/s) and covert it to RPM
     try:
         speed_des = q.get(block=False)                  # False used to prevent code on waiting for info
+        print(f'Current desired speed updated to: {speed_des} m/s')
+        user_changed_velocity = True
         speed_des = speed_des*(60/pi)/(2/39.3701)       # conversion to RPM
 
     except queue.Empty:
@@ -214,10 +237,10 @@ if __name__ == '__main__':
     # create a thread that runs the user input function (obtain user defined speeds)
     # NOTE: This is a daemon thread which allows the thread to be killed when the main program is killed,
     #       or else main thread will not be killed
-    user_in_thread = threading.Thread(target=getUserInput, args=(q,), daemon=True)
+    user_input_thread = threading.Thread(target=getUserInput, args=(q,), daemon=True)
 
     # start the user input thread
-    user_in_thread.start()
+    user_input_thread.start()
 
     try:
         while True:
@@ -228,7 +251,10 @@ if __name__ == '__main__':
             readUserInput()
 
             # set the motor speed determined from user input and current motor speeds (ramping included)
-            control_sig, m_vel = changeMotorVelocity()
+            if (user_changed_velocity == False):
+                control_sig, m_vel = maintainMotorVelocity()
+            else:
+                control_sig, m_vel = changeMotorVelocity()
 
             # print useful information about motor speeds
             print(control_sig, "|", speed_des, "|", m_vel)
