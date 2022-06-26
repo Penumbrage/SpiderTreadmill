@@ -188,18 +188,6 @@ def readEncoder(channel):
 # Create interrupt for ENCA
 GPIO.add_event_detect(ENCA, GPIO.RISING, callback = readEncoder)
 
-# Custom class break beam exception
-class BeamFault(Exception):
-    def __init__(self):
-        print("The IR break beam sensor has been triggered!")
-
-# Callback function for the break beam sensor
-def beamBroken():
-    raise BeamFault()
-
-# Create interrupt for the IR break beam sensor
-GPIO.add_event_detect(BEAM_RECEIVER, GPIO.FALLING, callback = beamBroken)
-
 # Create function running in child thread that waits for user inputs for speeds
 def getUserInput(q):
     # loop that is always waiting for a user input for the speed (running on a separate thread)
@@ -244,6 +232,19 @@ def raiseIfFault():
     if motors.motor1.getFault():
         raise DriverFault(driver_num=1)
 
+# Custom class break beam exception
+class BeamFault(Exception):
+    def __init__(self, pin_num):
+        self.pin_num = pin_num
+
+# fault function function for the break beam sensor
+def raiseIfBeamBroken():
+    global BEAM_RECEIVER
+
+    # if the BEAM_RECEIVER pin is low, then the beam is broken
+    if not GPIO.input(BEAM_RECEIVER):
+        raise BeamFault(pin_num=BEAM_RECEIVER)
+
 # Main execution loop for the motor
 if __name__ == '__main__':
 
@@ -262,6 +263,9 @@ if __name__ == '__main__':
         while True:
             # test for driver faults
             raiseIfFault()
+
+            # test the break beam sensor so that it isn't broker
+            raiseIfBeamBroken()
 
             # obtain user input for desired velocity if available from the queue
             readUserInput()
@@ -289,7 +293,10 @@ if __name__ == '__main__':
         print("Driver %s fault!" % e.driver_num)
 
     except BeamFault as b:
+        print(f"IR sensor on pin {b.pin_num} is broken!")
         print("Motor shutting down!")
+
+        # slow the motor down to a halt
         speed_des = 0
         changeMotorVelocity(ramp_time=2)
 
