@@ -21,6 +21,10 @@ ENCB = 24
 GPIO.setup(ENCA, GPIO.IN)
 GPIO.setup(ENCB, GPIO.IN)
 
+# Define and set up pins for the break beam sensor
+BEAM_RECEIVER = 21
+GPIO.setup(BEAM_RECEIVER, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
 # Create a queue to pass user-defined treadmill speeds to the main thread
 q = queue.Queue()
 
@@ -92,22 +96,6 @@ def motorPID(desired_vel, meas_vel):
 
     return u
 
-# Callback function for the encoder
-def readEncoder(channel):
-    global pos_i
-
-    # read ENCB when ENCA has been triggered with a rising signal
-    b = GPIO.input(ENCB)
-    increment = 0
-    if (b > 0):
-        # if ENCB is HIGH when ENCA is HIGH, motor is moving in negative (CCW) direction
-        increment = -1
-    else:
-        # if ENCB is LOW when ENCA is HIGH, motor is moving in the positive (CW) direction
-        increment = 1
-
-    pos_i = pos_i + increment
-
 # Function used to maintain the motor velocity if the user has not changed the velocity
 def maintainMotorVelocity():
     global speed_des
@@ -127,7 +115,7 @@ def maintainMotorVelocity():
     return control_sig, curr_speed
 
 # Function used to change the motor velocity based on the user input and current velocity
-def changeMotorVelocity():
+def changeMotorVelocity(ramp_time):
     global speed_des, user_changed_velocity
 
     # NOTE: built into this function is the ability to "ramp" from the current velocity
@@ -136,9 +124,6 @@ def changeMotorVelocity():
     #       the motor driver. This function is only called whenever there is a change in
     #       the desired velocity. Otherwise, the main thread will be running the 
     #       maintainMotorVelocity() function
-
-    # create a variable that stores the time over which the ramps signal should occur (in seconds)
-    ramp_time = 2
 
     # create variable that stores the time elapsed
     time_elapsed = 0
@@ -184,8 +169,36 @@ def changeMotorVelocity():
 
     return control_sig, curr_speed           # return final control signal and motor velocity
 
-# Create interrupt to ENCA
+# Callback function for the encoder
+def readEncoder(channel):
+    global pos_i
+
+    # read ENCB when ENCA has been triggered with a rising signal
+    b = GPIO.input(ENCB)
+    increment = 0
+    if (b > 0):
+        # if ENCB is HIGH when ENCA is HIGH, motor is moving in negative (CCW) direction
+        increment = -1
+    else:
+        # if ENCB is LOW when ENCA is HIGH, motor is moving in the positive (CW) direction
+        increment = 1
+
+    pos_i = pos_i + increment
+
+# Create interrupt for ENCA
 GPIO.add_event_detect(ENCA, GPIO.RISING, callback = readEncoder)
+
+# Custom class break beam exception
+class BeamFault(Exception):
+    def __init__(self):
+        print("The IR break beam sensor has been triggered!")
+
+# Callback function for the break beam sensor
+def beamBroken():
+    raise BeamFault()
+
+# Create interrupt for the IR break beam sensor
+GPIO.add_event_detect(BEAM_RECEIVER, GPIO.FALLING, callback = beamBroken)
 
 # Create function running in child thread that waits for user inputs for speeds
 def getUserInput(q):
@@ -229,7 +242,7 @@ class DriverFault(Exception):
 
 def raiseIfFault():
     if motors.motor1.getFault():
-        raise DriverFault(1)
+        raise DriverFault(driver_num=1)
 
 # Main execution loop for the motor
 if __name__ == '__main__':
@@ -257,7 +270,7 @@ if __name__ == '__main__':
             if (user_changed_velocity == False):
                 control_sig, m_vel = maintainMotorVelocity()
             else:
-                control_sig, m_vel = changeMotorVelocity()
+                control_sig, m_vel = changeMotorVelocity(ramp_time=2)
 
             # print useful information about motor speeds
             if (print_counter % 10 == 0):
@@ -270,10 +283,15 @@ if __name__ == '__main__':
         
         # slow the motor down so that it does not stop abruptly
         speed_des = 0
-        changeMotorVelocity()
+        changeMotorVelocity(ramp_time=2)
 
     except DriverFault as e:
         print("Driver %s fault!" % e.driver_num)
+
+    except BeamFault as b:
+        print("Motor shutting down!")
+        speed_des = 0
+        changeMotorVelocity(ramp_time=2)
 
     finally:
         GPIO.cleanup()
