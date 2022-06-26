@@ -22,7 +22,7 @@ GPIO.setup(ENCA, GPIO.IN)
 GPIO.setup(ENCB, GPIO.IN)
 
 # Create a queue to pass user-defined treadmill speeds to the main thread
-queue = queue.Queue()
+q = queue.Queue()
 
 # Create global variables required for the script
 pos_i = 0                       # variable that stores the encoder position from the interrupt function
@@ -101,7 +101,7 @@ def readEncoder(channel):
 GPIO.add_event_detect(ENCA, GPIO.RISING, callback = readEncoder)
 
 # Create function running in child thread that waits for user inputs for speeds
-def getUserInput(queue):
+def getUserInput(q):
     # loop that is always waiting for a user input for the speed (running on a separate thread)
     while True:
         try:
@@ -115,7 +115,9 @@ def getUserInput(queue):
             if not ((user_input >= -1.5) and (user_input <= 1.5)):
                 print("The speed you entered is not within the specified range. Please enter a new speed.")
             else:
-                queue.put(user_input)       # put the user-defined speed on the queue in m/s
+                q.put(user_input)       # put the user-defined speed on the queue in m/s
+                print(f'Current desired speed updated to: {user_input} m/s')
+
 
         except ValueError:
             print("You did not enter a number in the correct format (check for any unwanted characters, spaces, etc).")
@@ -139,7 +141,7 @@ if __name__ == '__main__':
     # create a thread that runs the user input function (obtain user defined speeds)
     # NOTE: This is a daemon thread which allows the thread to be killed when the main program is killed,
     #       or else main thread will not be killed
-    user_in_thread = threading.Thread(target=getUserInput, args=(queue), daemon=True)
+    user_in_thread = threading.Thread(target=getUserInput, args=(q,), daemon=True)
 
     # start the user input thread
     user_in_thread.start()
@@ -151,9 +153,8 @@ if __name__ == '__main__':
 
             # determine the desired speed from the user (in m/s) and covert it to RPM
             try:
-                speed_des = queue.get()
-                print("Current desired speed updated to: ", speed_des)
-                speed_des = speed_des*(60/pi)/(2/39.3701)
+                speed_des = q.get(block=False)               # False used to prevent code on waiting for info
+                speed_des = speed_des*(60/pi)/(2/39.3701)    # conversion to RPM
 
             except queue.Empty:
                 pass
@@ -161,8 +162,16 @@ if __name__ == '__main__':
             # determine the motor velocity from encoder
             m_vel = calcMotorVelocity()
 
-            # use PID function to determine speed to be sent to controller and set that speed
-            control_sig = motorPID(speed_des, m_vel)
+            # use PID function to determine speed to be sent to controller and set that speed 
+            # NOTE: there is a check for 0 m/s as an input speed because the PID will actually
+            #       never send a control signal of "0" and will waste energy sending a voltage
+            #       that is not enough to actually power the motor
+            if not (speed_des == 0):
+                control_sig = motorPID(speed_des, m_vel)
+            else:
+                control_sig = 0
+
+            # send the motor speed
             motor1.setSpeed(control_sig)
 
             # print useful information about motor speeds
@@ -175,12 +184,14 @@ if __name__ == '__main__':
             time.sleep(0.1)
 
     except KeyboardInterrupt:
-        print("Keyboard Interrupt")
+        print("\nKeyboard Interrupt")
 
     except DriverFault as e:
         print("Driver %s fault!" % e.driver_num)
 
     finally:
-        print("Program Exited")
         GPIO.cleanup()
+        print("GPIO pins cleaned up")
         motors.forceStop()
+        print("Motors stopped")
+        print("Program exited")
