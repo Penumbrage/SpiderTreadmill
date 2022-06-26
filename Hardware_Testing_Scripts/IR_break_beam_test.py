@@ -33,4 +33,6 @@ except KeyboardInterrupt:
     print("\nKeyboard Interrupt ... Exiting")
 
 finally:
+    print("GPIO pins cleaned up")
+    GPIO.cleanup()
     print("Exited")
