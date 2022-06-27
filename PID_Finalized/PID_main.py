@@ -1,6 +1,7 @@
 # This script is the main script running the PID controller for the DC motor
 
 # import required modules
+from turtle import speed
 from single_tb9051ftg_rpi import Motor, Motors, MAX_SPEED
 from Encoder_Class import Encoder
 from IR_Break_Beam_Class import IRBreakBeam
@@ -54,9 +55,6 @@ if __name__ == '__main__':
         # counter for the print statements
         print_counter = 0
 
-        # Initialize the desired speed to be 0
-        speed_des = 0
-
         while True:
             # test for driver faults
             raiseIfFault()
@@ -64,12 +62,15 @@ if __name__ == '__main__':
             # test the break beam sensor so that it isn't broken
             raiseIfBeamBroken()
 
-            # attempt to get a user input if available on the queue
-            speed_des, user_changed_velocity = user_input.readUserInput()
+            # attempt to get a user input if available on the queue (starts at zero speed and tries to maintain velocitity)
+            user_input.readUserInput()
+            speed_des = user_input.speed_des
+            user_changed_velocity = user_input.user_changed_velocity
 
             # set the motor speed determined from user input and current motor speeds (ramping included)
             if (user_changed_velocity):
                 control_sig, curr_speed, user_changed_velocity = motor_control.changeMotorVelocity(ramp_time=2, speed_des=speed_des)
+                user_input.user_changed_velocity = user_changed_velocity    # reset flag
             else:
                 control_sig, curr_speed = motor_control.maintainMotorVelocity(speed_des=speed_des)
 

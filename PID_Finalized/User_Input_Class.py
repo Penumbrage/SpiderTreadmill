@@ -13,12 +13,14 @@ class UserInput(object):
 
     # instantiation function
     def __init__(self):
+        self.speed_des = 0          # initially set the desired speed to be 0
+        self.user_changed_velocity = False          # initially set the motor to maintain velocities
         self.q = queue.Queue()      # queue used to pass information from the user input to the motors
 
         # create a thread that runs the user input function (obtain user defined speeds)
         # NOTE: This is a daemon thread which allows the thread to be killed when the main program is killed,
         #       or else main thread will not be killed
-        self.user_input_thread = threading.Thread(target=self.getUserInput, args=(self,), daemon=True)
+        self.user_input_thread = threading.Thread(target=self.getUserInput, daemon=True)
         
         # start the thread upon instantiation
         self.user_input_thread.start()
@@ -49,12 +51,10 @@ class UserInput(object):
 
         # determine the desired speed from the user (in m/s) and covert it to RPM
         try:
-            speed_des = self.q.get(block=False)                  # False used to prevent code on waiting for info
-            print(f'Current desired speed updated to: {speed_des} m/s')
-            user_changed_velocity = True
-            speed_des = speed_des*(60/pi)/(2/39.3701)       # conversion to RPM
-
-            return speed_des, user_changed_velocity
+            self.speed_des = self.q.get(block=False)                  # False used to prevent code on waiting for info
+            print(f'Current desired speed updated to: {self.speed_des} m/s')
+            self.user_changed_velocity = True
+            self.speed_des = self.speed_des*(60/pi)/(2/39.3701)       # conversion to RPM
 
         except queue.Empty:
             pass
