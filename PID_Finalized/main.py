@@ -1,7 +1,6 @@
 # This script is the main script running the PID controller for the DC motor
 
 # import required modules
-from turtle import speed
 from single_tb9051ftg_rpi import Motor, Motors, MAX_SPEED
 from Encoder_Class import Encoder
 from IR_Break_Beam_Class import IRBreakBeam
