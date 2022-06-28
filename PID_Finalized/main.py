@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
             # set the motor speed determined from user input and current motor speeds (ramping included)
             if (user_changed_velocity):
-                control_sig, curr_speed, user_changed_velocity = motor_control.changeMotorVelocity(ramp_time=2, speed_des=speed_des)
+                control_sig, curr_speed, user_changed_velocity = motor_control.changeMotorVelocity(ramp_time=5, speed_des=speed_des)
                 user_input.user_changed_velocity = user_changed_velocity    # reset flag
             else:
                 control_sig, curr_speed = motor_control.maintainMotorVelocity(speed_des=speed_des)
