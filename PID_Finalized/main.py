@@ -69,7 +69,7 @@ if __name__ == '__main__':
         print("Driver %s fault!" % e.driver_num)
 
     except Exceptions.BeamFault as b:
-        print(f"IR sensor on pin {b.pin_num} is broken!")
+        print(f"IR sensor on pin {b.pin_num} is broken or has been triggered!")
         print("Motor shutting down!")
 
         # slow the motor down to a halt

@@ -20,6 +20,10 @@ class BeamFault(Exception):
 
 # fault function function for the break beam sensor
 def raiseIfBeamBroken(IR_sen):
-    # if the BEAM_RECEIVER pin is low, then the beam is broken
-    if IR_sen.beam_broken():
+    # check if the callback has been triggered (use lock to prevent race conditions with callback thread)
+    with IR_sen.beam_lock:
+        beam_triggered = IR_sen.triggered
+
+    # raise the fault if the beam pin is LOW or the beam has been triggered via the callback
+    if IR_sen.beam_broken() or beam_triggered:
         raise BeamFault(pin_num=IR_sen.beam_pin)
