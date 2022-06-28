@@ -22,7 +22,7 @@ class IRBreakBeam(object):
         GPIO.setup(beam_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
         # have the IR sensor also operate as an interrupt function so that we don't miss any triggers
-        GPIO.add_event_detect(beam_pin, GPIO.FALLING, callback = self.beam_triggered)        
+        GPIO.add_event_detect(beam_pin, GPIO.FALLING, callback = self.beam_triggered, bouncetime = 100)        
 
     # create a function that checks the beam pin (this checks for a state, not an event)
     def beam_broken(self):
@@ -30,7 +30,7 @@ class IRBreakBeam(object):
         return not GPIO.input(self.beam_pin)
         
     # create a callback function that triggers whenever the IR sensor is triggered to be falling
-    def beam_triggered(self):
+    def beam_triggered(self, channel):
         with self.beam_lock:            # make sure main thread and callback thread aren't racing
             self.triggered = True
         print("The beam has been triggered!")
