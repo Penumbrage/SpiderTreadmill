@@ -3,6 +3,7 @@
 # import required modules
 import queue
 import threading
+import time
 from math import pi
 
 class UserInput(object):
@@ -51,6 +52,9 @@ class UserInput(object):
                 else:
                     self.q.put(user_input)       # put the user-defined speed on the queue in m/s
 
+                # After successfully sending a user input, wait a bit before sending the next input
+                time.sleep(0.1)
+
             except ValueError:
                 print("You did not enter a number in the correct format (check for any unwanted characters, spaces, etc).")
                 print("Please enter your speed again.")
@@ -70,7 +74,10 @@ class UserInput(object):
                 if not ((user_input >= -480.0) and (user_input <= 480.0)):
                     print("The speed you entered is not within the specified range. Please enter a new speed.")
                 else:
-                    self.q.put(user_input)       # put the user-defined speed on the queue 
+                    self.q.put(user_input)       # put the user-defined speed on the queue
+
+                # After successfully sending a user input, wait a bit before sending the next input
+                time.sleep(0.1)
 
             except ValueError:
                 print("You did not enter a number in the correct format (check for any unwanted characters, spaces, etc).")
