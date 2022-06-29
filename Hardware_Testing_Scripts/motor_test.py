@@ -2,7 +2,7 @@
 
 # import required modules
 from single_tb9051ftg_rpi import Motor, Motors, MAX_SPEED
-from User_Input_class import UserInput
+from User_Input_Class import UserInput
 import Exceptions
 
 # Create the Motor and Motors objects
@@ -19,7 +19,7 @@ def main():
     try:
         while True:
             # check for driver faults
-            Exceptions.raiseIfFault()
+            Exceptions.raiseIfFault(motors)
 
             # obtain user input if any
             user_input.readUserPWM()
