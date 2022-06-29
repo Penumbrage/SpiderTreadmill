@@ -24,7 +24,7 @@ IR_sen = IRBreakBeam(beam_pin=21)
 motor_control = MotorPID(motor=motor1, encoder=encoder)
 
 # Create user input object
-user_input = UserInput()
+user_input = UserInput(input_mode='m/s')
 
 # Main execution loop for the script
 if __name__ == '__main__':
