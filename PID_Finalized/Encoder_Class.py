@@ -27,10 +27,10 @@ class Encoder(object):
         GPIO.setup(ENCB, GPIO.IN)
 
         # set the encoder as an interrupt by default
-        GPIO.add_event_detect(ENCA, GPIO.RISING, callback = self.readEncoder)
+        GPIO.add_event_detect(ENCA, GPIO.RISING, callback = self.__readEncoder)
 
     # Callback function for the encoder (updates the counts/position of the encoder)
-    def readEncoder(self, channel):
+    def __readEncoder(self, channel):
 
         # read ENCB when ENCA has been triggered with a rising signal
         b = GPIO.input(self.ENCB)
