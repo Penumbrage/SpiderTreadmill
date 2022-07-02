@@ -1,7 +1,6 @@
 # This script is the main script running the PID controller for the DC motor
 
 # import required modules
-from cv2 import line
 from single_tb9051ftg_rpi import Motor, Motors, MAX_SPEED
 from Encoder_Class import Encoder
 from IR_Break_Beam_Class import IRBreakBeam
@@ -9,6 +8,7 @@ from PID_Controller_Class import MotorPID
 from User_Input_Class import UserInput
 import Exceptions
 import RPi.GPIO as GPIO
+import time
 import board
 import digitalio
 import adafruit_character_lcd.character_lcd as characterlcd
@@ -52,7 +52,10 @@ if __name__ == '__main__':
 
     try:
         # print start message
+        lcd.clear()
         lcd.message = "Program started!"
+        time.sleep(5)
+        lcd.clear()
 
         # counter for the print statements
         print_counter = 0
@@ -71,35 +74,36 @@ if __name__ == '__main__':
 
             # set the motor speed determined from user input and current motor speeds (ramping included)
             if (user_changed_velocity):
-                lcd.message = "Ramp start"      # indicate speed ramp is starting
+                lcd.clear()
+                lcd.message = "Ramping speed"      # indicate speed ramp is occurring
                 control_sig, curr_speed, user_changed_velocity = motor_control.changeMotorVelocity(ramp_time=5, speed_des=speed_des)
-                lcd.message = "Ramp stop"       # indicate ramping of speed is complete
+                lcd.clear()
                 user_input.user_changed_velocity = user_changed_velocity    # reset flag
 
                 # convert desired and current speeds back to m/s and print to the LCD
                 des_spd_mps = motor_control.RPMToMPS(speed_des)
                 curr_spd_mps = motor_control.RPMToMPS(curr_speed) 
-                line_1 = "Des spd: %.2f" % des_spd_mps
-                line_2 = "Curr spd: %.2f" % curr_spd_mps
-                lcd.message = line_1 + line_1
+                line_1 = "Des: %.2f m/s\n" % des_spd_mps
+                line_2 = "Act: %.2f m/s" % curr_spd_mps
             else:
                 control_sig, curr_speed = motor_control.maintainMotorVelocity(speed_des=speed_des)
 
                 # convert desired and current speeds back to m/s and print to the LCD
                 des_spd_mps = motor_control.RPMToMPS(speed_des)
                 curr_spd_mps = motor_control.RPMToMPS(curr_speed) 
-                line_1 = "Des spd: %.2f" % des_spd_mps
-                line_2 = "Curr spd: %.2f" % curr_spd_mps
-                lcd.message = line_1 + line_1
+                line_1 = "Des: %.2f m/s\n" % des_spd_mps
+                line_2 = "Act: %.2f m/s" % curr_spd_mps
 
             # print useful information about motor speeds
             if (print_counter % 10 == 0):
                 print(control_sig, "|", speed_des, "|", curr_speed)
+                lcd.message = line_1 + line_2
 
             print_counter = print_counter + 1
 
     except KeyboardInterrupt:
         print("\nKeyboard Interrupt")
+        lcd.clear()
         lcd.message = "Program stopped!"
         
         # slow the motor down so that it does not stop abruptly
@@ -108,10 +112,12 @@ if __name__ == '__main__':
 
     except Exceptions.DriverFault as e:
         print("Driver %s fault!" % e.driver_num)
+        lcd.clear()
         lcd.message = ("Driver %s fault!" % e.driver_num)
 
     except Exceptions.BeamFault as b:
         print(f"IR sensor on pin {b.pin_num} is broken or has been triggered!")
+        lcd.clear()
         lcd.message = ("IR %s triggered!" % b.pin_num)
         print("Motor shutting down!")
 
