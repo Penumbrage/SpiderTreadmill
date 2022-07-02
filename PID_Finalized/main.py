@@ -8,8 +8,28 @@ from PID_Controller_Class import MotorPID
 from User_Input_Class import UserInput
 import Exceptions
 import RPi.GPIO as GPIO
+import board
+import digitalio
+import adafruit_character_lcd.character_lcd as characterlcd
 
 # ---------------- Create various objects required for the script --------------------- #
+# Create the LCD object for the LCD screen (requires some setup with the input pins)
+# Size of the LCD
+lcd_columns = 16
+lcd_rows = 2
+
+# pin definitions for the LCD
+lcd_rs = digitalio.DigitalInOut(board.D2)
+lcd_en = digitalio.DigitalInOut(board.D3)
+lcd_d4 = digitalio.DigitalInOut(board.D17)
+lcd_d5 = digitalio.DigitalInOut(board.D27)
+lcd_d6 = digitalio.DigitalInOut(board.D22)
+lcd_d7 = digitalio.DigitalInOut(board.D10)
+
+# Initialise the lcd class
+lcd = characterlcd.Character_LCD_Mono(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6,
+                                      lcd_d7, lcd_columns, lcd_rows)
+
 # Create the Motor and Motors objects
 motor1 = Motor(pwm1_pin=12, pwm2_pin=13, en_pin=4, enb_pin=5, diag_pin=6)
 motors = Motors(motor1)
@@ -55,6 +75,7 @@ if __name__ == '__main__':
             # print useful information about motor speeds
             if (print_counter % 10 == 0):
                 print(control_sig, "|", speed_des, "|", curr_speed)
+                lcd.message = curr_speed        # print the current speed to the console
 
             print_counter = print_counter + 1
 
