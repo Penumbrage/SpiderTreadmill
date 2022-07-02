@@ -4,9 +4,8 @@
 # NOTE: This script requires specific packages to be installed from Adafruit
 #       which can be found via this website: https://learn.adafruit.com/drive-a-16x2-lcd-directly-with-a-raspberry-pi/necessary-packages
 
-# NOTE: For the VO pin, which provides the contrast on the LCD screen, a 330 Ohm resistor was used instead
-#       of the potentionmeter. Please refer to this forum for the reason why this substitution
-#       works: https://forum.arduino.cc/t/how-to-connect-the-vo-pin-with-potentiometer-on-lcd-1602a-with-arduino-nano/521088
+# NOTE: For the VO pin, which provides the contrast on the LCD screen, a 5K Ohm resistor was used instead
+#       of the potentiometer.
 
 # SPDX-FileCopyrightText: 2018 Mikey Sklar for Adafruit Industries
 #
@@ -82,4 +81,4 @@ while True:
     # combine both lines into one update to the display
     lcd.message = lcd_line_1 + lcd_line_2
 
-    sleep(2)
+    sleep(1)
