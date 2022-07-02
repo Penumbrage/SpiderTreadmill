@@ -3,6 +3,7 @@
 
 # import required libraries
 import time
+from math import pi
 
 class MotorPID(object):
     '''
@@ -127,3 +128,12 @@ class MotorPID(object):
 
         return control_sig, curr_speed, user_changed_velocity          # return final control signal and motor velocity and flag
     
+    # function to convert speeds from RPM to m/s
+    def RPMToMPS(self, rpm):
+        mps = rpm*(pi/60.0)*(2/39.3701)
+        return mps
+
+    # function to convert speeds from m/s to RPM
+    def MPSToRPM(self, mps):
+        rpm = mps*(60/pi)/(2/39.3701) 
+        return rpm
