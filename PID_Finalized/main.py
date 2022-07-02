@@ -75,7 +75,7 @@ if __name__ == '__main__':
             # print useful information about motor speeds
             if (print_counter % 10 == 0):
                 print(control_sig, "|", speed_des, "|", curr_speed)
-                lcd.message = curr_speed        # print the current speed to the console
+                lcd.message = str(curr_speed)        # print the current speed to the console
 
             print_counter = print_counter + 1
 
