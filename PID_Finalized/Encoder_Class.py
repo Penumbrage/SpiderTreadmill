@@ -26,8 +26,9 @@ class Encoder(object):
         GPIO.setup(ENCA, GPIO.IN)
         GPIO.setup(ENCB, GPIO.IN)
 
-        # set the encoder as an interrupt by default
+        # set the encoder as an interrupt by default (for both pins)
         GPIO.add_event_detect(ENCA, GPIO.BOTH, callback = self.__readEncoderA)
+        GPIO.add_event_detect(ENCB, GPIO.BOTH, callback = self.__readEncoderB)
 
     # Callback function for the encoder (updates the counts/position of the encoder)
     # NOTE: this callback function is called whenever ENCA is triggered
@@ -40,15 +41,43 @@ class Encoder(object):
         increment = 0
 
         if (b > 0 and a > 0):
-            # if ENCB is HIGH when ENCA is HIGH, motor is moving in negative (CCW) direction
+            # if ENCB is HIGH when ENCA is HIGH, motor is moving in the negative (CCW) direction
             increment = -1
         elif (b == 0 and a == 0):
             # if ENCB is LOW when ENCA is LOW, motor is moving in the negative (CCW) direction
             increment = -1
         else:
-            # if ENCB has a different state compared to ENCA when measured, motor is moving in
+            # if ENCB has a different state compared to ENCA when measured, motor is moving in the
             # positive (CW) direction
             increment = 1
+
+        # update the pos_i variable when the interrupt triggers
+        # NOTE: a lock has been included so that anything trying to access the pos_i variable
+        #       to get the current position is not in conflict when the interrupt pin wants to
+        #       access the variable
+        with self.enc_lock:
+            self.pos_i = self.pos_i + increment
+
+    # Callback function for the encoder (updates the counts/position of the encoder)
+    # NOTE: this callback function is called whenever ENCB is triggered
+    def __readEncoderB(self, channel):
+
+        # read ENCA when ENCB has been triggered with a rising or falling signal
+        a = GPIO.input(self.ENCA)
+        b = GPIO.input(self.ENCB)
+
+        increment = 0
+
+        if (b > 0 and a > 0):
+            # if ENCA is HIGH when ENCB is HIGH, motor is moving in the positive (CW) direction
+            increment = 1
+        elif (b == 0 and a == 0):
+            # if ENCA is LOW when ENCB is LOW, motor is moving in the positive (CW) direction
+            increment = 1
+        else:
+            # if ENCA has a different state compared to ENCB when measured, motor is moving in the
+            # negative (CCW) direction
+            increment = -1
 
         # update the pos_i variable when the interrupt triggers
         # NOTE: a lock has been included so that anything trying to access the pos_i variable
@@ -72,7 +101,7 @@ class Encoder(object):
         velocity = (pos_stop - pos_start)/deltaT    # calculate the velocity
 
         # change the velocity into RPM
-        # Notes about conversion factors: 9.68 gear ratio, 24 counts/rev, 60 sec/min
-        velocity = velocity/(9.68*24)*60.0
+        # Notes about conversion factors: 9.68 gear ratio, 48 counts/rev, 60 sec/min
+        velocity = velocity/(9.68*48)*60.0
 
         return velocity
