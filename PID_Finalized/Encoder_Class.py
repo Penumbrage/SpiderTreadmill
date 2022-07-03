@@ -42,7 +42,7 @@ class Encoder(object):
         if (b > 0 and a > 0):
             # if ENCB is HIGH when ENCA is HIGH, motor is moving in negative (CCW) direction
             increment = -1
-        elif (b < 0 and a < 0):
+        elif (b == 0 and a == 0):
             # if ENCB is LOW when ENCA is LOW, motor is moving in the negative (CCW) direction
             increment = -1
         else:
