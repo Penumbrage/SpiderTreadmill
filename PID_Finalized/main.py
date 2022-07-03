@@ -57,8 +57,11 @@ if __name__ == '__main__':
         time.sleep(5)
         lcd.clear()
 
-        # counter for the print statements
-        print_counter = 0
+        # time delay after which print should occur (sec)
+        print_delay = 1
+
+        # create a start timer for the print statements
+        print_time_start = time.perf_counter()
 
         while True:
             # test for driver faults
@@ -82,7 +85,7 @@ if __name__ == '__main__':
 
                 # convert desired and current speeds back to m/s and print to the LCD
                 des_spd_mps = motor_control.RPMToMPS(speed_des)
-                curr_spd_mps = motor_control.RPMToMPS(curr_speed) 
+                curr_spd_mps = motor_control.RPMToMPS(curr_speed)
                 line_1 = "Des: %.2f m/s\n" % des_spd_mps
                 line_2 = "Act: %.2f m/s" % curr_spd_mps
             else:
@@ -90,22 +93,24 @@ if __name__ == '__main__':
 
                 # convert desired and current speeds back to m/s and print to the LCD
                 des_spd_mps = motor_control.RPMToMPS(speed_des)
-                curr_spd_mps = motor_control.RPMToMPS(curr_speed) 
+                curr_spd_mps = motor_control.RPMToMPS(curr_speed)
                 line_1 = "Des: %.2f m/s\n" % des_spd_mps
                 line_2 = "Act: %.2f m/s" % curr_spd_mps
 
+            # check the print time
+            print_time_stop = time.perf_counter()
+
             # print useful information about motor speeds
-            if (print_counter % 10 == 0):
+            if ((print_time_stop - print_time_start) >= print_delay):
                 print(control_sig, "|", speed_des, "|", curr_speed)
                 lcd.message = line_1 + line_2
-
-            print_counter = print_counter + 1
+                print_time_start = time.perf_counter()
 
     except KeyboardInterrupt:
         print("\nKeyboard Interrupt")
         lcd.clear()
         lcd.message = "Program stopped!"
-        
+
         # slow the motor down so that it does not stop abruptly
         speed_des = 0
         motor_control.changeMotorVelocity(ramp_time=2, speed_des=speed_des)
