@@ -7,7 +7,7 @@ import time
 
 class Encoder(object):
     '''
-    This class deals with setting up and reading the encoder pins provided to 
+    This class deals with setting up and reading the encoder pins provided to
     the brushed DC motor. This class allows you to calculate the motor speed
     via a built-in function.
     '''
@@ -27,20 +27,27 @@ class Encoder(object):
         GPIO.setup(ENCB, GPIO.IN)
 
         # set the encoder as an interrupt by default
-        GPIO.add_event_detect(ENCA, GPIO.RISING, callback = self.__readEncoder)
+        GPIO.add_event_detect(ENCA, GPIO.BOTH, callback = self.__readEncoderA)
 
     # Callback function for the encoder (updates the counts/position of the encoder)
-    def __readEncoder(self, channel):
+    # NOTE: this callback function is called whenever ENCA is triggered
+    def __readEncoderA(self, channel):
 
-        # read ENCB when ENCA has been triggered with a rising signal
+        # read ENCB when ENCA has been triggered with a rising or falling signal
+        a = GPIO.input(self.ENCA)
         b = GPIO.input(self.ENCB)
+
         increment = 0
 
-        if (b > 0):
+        if (b > 0 and a > 0):
             # if ENCB is HIGH when ENCA is HIGH, motor is moving in negative (CCW) direction
             increment = -1
+        elif (b < 0 and a < 0):
+            # if ENCB is LOW when ENCA is LOW, motor is moving in the negative (CCW) direction
+            increment = -1
         else:
-            # if ENCB is LOW when ENCA is HIGH, motor is moving in the positive (CW) direction
+            # if ENCB has a different state compared to ENCA when measured, motor is moving in
+            # positive (CW) direction
             increment = 1
 
         # update the pos_i variable when the interrupt triggers
@@ -64,7 +71,8 @@ class Encoder(object):
         deltaT = time_stop - time_start             # calculate the elapsed time
         velocity = (pos_stop - pos_start)/deltaT    # calculate the velocity
 
-        # change the velocity into RPM (116.16 is the product of the gear ratio - 9.68 - and the encoder counts per rev - 12 - and 60 is from sec to min)
-        velocity = velocity/116.16*60.0
+        # change the velocity into RPM
+        # Notes about conversion factors: 9.68 gear ratio, 24 counts/rev, 60 sec/min
+        velocity = velocity/(9.68*24)*60.0
 
         return velocity
