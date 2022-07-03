@@ -29,7 +29,8 @@ class MotorPID(object):
         deltaT = time_curr - self.time_prev
 
         # tuning constants
-        # NOTE: from testing, it appears that having k_p as 0.1 as the only value works quite well
+        # NOTE: from testing, it appears that having k_p as 0.1 as the only value works quite well (if using u_prev)
+        # NOTE: from testing, k_p = 0.5, k_i = 0.5 works for classic PID (no use of u_prev in control signal)
         k_p = 0.1
         k_i = 0
         k_d = 0
@@ -84,7 +85,7 @@ class MotorPID(object):
         #       to the desired velocity to provide smoother transitions between velocities
         #       that also minimize strain of sharp fluctuations of speed on the motor and
         #       the motor driver. This function is only called whenever there is a change in
-        #       the desired velocity. Otherwise, the main thread will be running the 
+        #       the desired velocity. Otherwise, the main thread will be running the
         #       maintainMotorVelocity() function
 
         # create variable that stores the time elapsed
@@ -127,7 +128,7 @@ class MotorPID(object):
         print("Ramp completed")
 
         return control_sig, curr_speed, user_changed_velocity          # return final control signal and motor velocity and flag
-    
+
     # function to convert speeds from RPM to m/s
     def RPMToMPS(self, rpm):
         mps = rpm*(pi/60.0)*(2/39.3701)
@@ -135,5 +136,5 @@ class MotorPID(object):
 
     # function to convert speeds from m/s to RPM
     def MPSToRPM(self, mps):
-        rpm = mps*(60/pi)/(2/39.3701) 
+        rpm = mps*(60/pi)/(2/39.3701)
         return rpm
