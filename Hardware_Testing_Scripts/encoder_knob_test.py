@@ -1,6 +1,6 @@
 # This is test code used to verify the functionality of the KY-040 rotary encoder used to
 # change the speed of the motor
-# Source for this code: 
+# Source for this code comes from this tutorial: https://blog.sharedove.com/adisjugo/index.php/2020/05/10/using-ky-040-rotary-encoder-on-raspberry-pi-to-control-volume/
 
 import RPi.GPIO as GPIO
 
