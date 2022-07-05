@@ -14,7 +14,9 @@ class UserInput(object):
 
     # instantiation function
     def __init__(self, input_mode):
-        self.speed_des = 0          # initially set the desired speed to be 0
+        self.speed_des_mps = 0          # initially set the desired speed to be 0 m/s
+        self.speed_des_RPM = 0          # desired speed in RPM
+        self.speed_des_PWM = 0          # desired speed in terms of PWM
         self.user_changed_velocity = False          # initially set the motor to maintain velocities
         self.q = queue.Queue()      # queue used to pass information from the user input to the motors
         self.input_mode = input_mode        # string that specifies what type of user thread to run
@@ -88,10 +90,10 @@ class UserInput(object):
 
         # determine the desired speed from the user (in m/s) and covert it to RPM
         try:
-            self.speed_des = self.q.get(block=False)                  # False used to prevent code on waiting for info
-            print(f'Current desired speed updated to: {self.speed_des} m/s')
+            self.speed_des_mps = self.q.get(block=False)                  # False used to prevent code on waiting for info
+            print(f'Current desired speed updated to: {self.speed_des_mps} m/s')
             self.user_changed_velocity = True
-            self.speed_des = self.speed_des*(60/pi)/(2/39.3701)       # conversion to RPM
+            self.speed_des_RPM = self.speed_des_mps*(60/pi)/(2/39.3701)       # conversion to RPM
 
         except queue.Empty:
             pass
@@ -101,8 +103,8 @@ class UserInput(object):
 
         # determine the desired speed from the user
         try:
-            self.speed_des = self.q.get(block=False)                  # False used to prevent code on waiting for info
-            print(f'Current desired speed updated to: {self.speed_des}')
+            self.speed_des_PWM = self.q.get(block=False)                  # False used to prevent code on waiting for info
+            print(f'Current desired speed updated to: {self.speed_des_PWM}')
 
         except queue.Empty:
             pass
