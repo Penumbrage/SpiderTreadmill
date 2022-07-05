@@ -1,4 +1,5 @@
 # This file stores files to be ignored in github commits
 .vscode
-_pycache_
+__pycache__
 *.log
+build
