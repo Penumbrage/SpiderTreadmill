@@ -6,6 +6,7 @@ from Encoder_Class import Encoder
 from IR_Break_Beam_Class import IRBreakBeam
 from PID_Controller_Class import MotorPID
 from User_Input_Class import UserInput
+from Knob_Class import Knob
 import Exceptions
 import RPi.GPIO as GPIO
 import time
@@ -47,6 +48,9 @@ motor_control = MotorPID(motor=motor1, encoder=encoder)
 # Create user input object
 user_input = UserInput(input_mode='m/s')
 
+# Create object for the knob (requires the user_input object)
+knob = Knob(user_input=user_input, clk=18, dt=25, sw=20)
+
 # Main execution loop for the script
 if __name__ == '__main__':
 
@@ -72,7 +76,7 @@ if __name__ == '__main__':
 
             # attempt to get a user input if available on the queue (starts at zero speed and tries to maintain velocity)
             user_input.readUserInput()
-            speed_des = user_input.speed_des
+            speed_des = user_input.speed_des_RPM
             user_changed_velocity = user_input.user_changed_velocity
 
             # set the motor speed determined from user input and current motor speeds (ramping included)
