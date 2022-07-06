@@ -7,5 +7,6 @@ setup(name='motor_PID_package',
                     'required to operate a DC motor with PID'),
       author='William Wang',
       url='https://github.com/Animal-Inspired-Motion-And-Robotics-Lab/SpiderTreadmill',
-      py_modules=['Encoder_Class', 'Exceptions', 'IR_Break_Beam_Class', 'PID_Controller_Class', 'User_Input_Class', 'Knob_Class'],
+      py_modules=['Encoder_Class', 'Exceptions', 'IR_Break_Beam_Class', 'PID_Controller_Class',
+                   'User_Input_Class', 'Knob_Class', 'LCD_Class'],
       )
