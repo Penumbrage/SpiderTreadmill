@@ -16,8 +16,9 @@ class Knob(object):
     '''
 
     # instantiation function for the rotary encoder
-    def __init__(self, user_input, clk=18, dt=25, sw=20):
+    def __init__(self, user_input, lcd, clk=18, dt=25, sw=20):
         self.user_input = user_input        # receive UserInput object (access the speed_des variable)
+        self.lcd = lcd                      # receive LCD object (to be able to print to the LCD)
         self.clk = clk                      # pin for the clock 
         self.dt = dt                        # pin for the direction
         self.sw = sw                        # pin for the push button switch
@@ -47,9 +48,16 @@ class Knob(object):
 
         # update the desired speed if we meet the following states
         if clkState == 0 and dtState == 1:
-            with self.knob_lock:
-                self.user_input.speed_des_mps = self.user_input.speed_des_mps - self.step_size      # speed in m/s
-                self.user_input.speed_des_RPM = self.user_input.speed_des_mps*(60/pi)/(2/39.3701)   # convert to RPM
+            with self.knob_lock:         # access with lock to prevent racing with main loop
+                if (self.user_input.speed_des_mps > 1.5):       # set upper limit/warning to lcd
+                    msg = "Speed at upper\nlim of 1.5 m/s"
+                    self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=1, clr_before=True, clr_after=True)
+                elif (self.user_input.speed_des_mps < -1.5):    # set lower limit/warning to lcd
+                    msg = "Speed at lower\nlim of -1.5 m/s"
+                    self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=1, clr_before=True, clr_after=True)
+                else:
+                    self.user_input.speed_des_mps = self.user_input.speed_des_mps - self.step_size      # speed in m/s
+                    self.user_input.speed_des_RPM = self.user_input.speed_des_mps*(60/pi)/(2/39.3701)   # convert to RPM
 
     # Callback function to be called when the dt pin is triggered with a falling signal
     def __dtClicked(self, channel):
@@ -61,8 +69,15 @@ class Knob(object):
         # update the desired speed if we meet the following states for the pins
         if clkState == 1 and dtState == 0:
             with self.knob_lock:
-                self.user_input.speed_des_mps = self.user_input.speed_des_mps + self.step_size              # speed in m/s
-                self.user_input.speed_des_RPM = self.user_input.speed_des_mps*(60/pi)/(2/39.3701)   # convert to RPM
+                if (self.user_input.speed_des_mps > 1.5):       # set upper limit/warning to lcd
+                    msg = "Speed at upper\nlim of 1.5 m/s"
+                    self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=1, clr_before=True, clr_after=True)
+                elif (self.user_input.speed_des_mps < -1.5):    # set lower limit/warning to lcd
+                    msg = "Speed at lower\nlim of -1.5 m/s"
+                    self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=1, clr_before=True, clr_after=True)
+                else:
+                    self.user_input.speed_des_mps = self.user_input.speed_des_mps + self.step_size              # speed in m/s
+                    self.user_input.speed_des_RPM = self.user_input.speed_des_mps*(60/pi)/(2/39.3701)   # convert to RPM
 
     # Callback function that is called whenever the switch is pressed (used to update the increment size)
     def __swClicked(self, channel):
@@ -73,8 +88,12 @@ class Knob(object):
         # if the button state is True, then the step size for speed_des is 0.01 m/s
         if self.button_pressed:
             self.step_size = 0.01
+            msg = "Current step size:\n0.01 m/s"
+            self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=1, clr_before=True, clr_after=True)
         # if button state is False, then the step size for speed_des is 0.1 m/s
         else:
             self.step_size = 0.1
+            msg = "Current step size:\n0.01 m/s"
+            self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=1, clr_before=True, clr_after=True)
 
             
