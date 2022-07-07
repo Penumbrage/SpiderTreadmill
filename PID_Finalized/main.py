@@ -56,10 +56,11 @@ if __name__ == '__main__':
 
     try:
         # print start message
-        msg = "Program started!"
+        msg = "Program\nstarting!"
         lcd.sendtoLCDThread(target="main", msg=msg, duration=5, clr_before=True, clr_after=True)
+        time.sleep(5)        # synchonize the print statement with the main script
 
-        # time delay after which print should occur (sec)
+        # time delay after which print statements should occur (sec)
         print_delay = 1
 
         # create a start timer for the print statements
@@ -74,9 +75,9 @@ if __name__ == '__main__':
 
             # attempt to get a user input if available on the queue (starts at zero speed and tries to maintain velocity)
             user_input.readUserInput()
-            with knob.knob_lock:            # access the speed_des_RPM with the knob lock so that the rotary encoder does not access it via interrupts
+            with user_input.speed_des_lock:            # access the speed_des_RPM with lock so that the rotary encoder does not access it via interrupts
                 speed_des = user_input.speed_des_RPM
-            user_changed_velocity = user_input.user_changed_velocity        # check if the user inputted a command via terminal
+                user_changed_velocity = user_input.user_changed_velocity        # check if the user inputted a command via terminal
 
             # set the motor speed determined from user input and current motor speeds (ramping included)
             if (user_changed_velocity):
@@ -88,8 +89,8 @@ if __name__ == '__main__':
                 # convert desired and current speeds back to m/s and print to the LCD
                 des_spd_mps = motor_control.RPMToMPS(speed_des)
                 curr_spd_mps = motor_control.RPMToMPS(curr_speed)
-                line_1 = "Des: %.2f m/s\n" % des_spd_mps
-                line_2 = "Act: %.2f m/s" % curr_spd_mps
+                line_1 = "Des: %.2f m/s" % des_spd_mps
+                line_2 = "\nAct: %.2f m/s" % curr_spd_mps
             else:
                 control_sig, curr_speed = motor_control.maintainMotorVelocity(speed_des=speed_des)
 
@@ -97,16 +98,18 @@ if __name__ == '__main__':
                 des_spd_mps = motor_control.RPMToMPS(speed_des)
                 curr_spd_mps = motor_control.RPMToMPS(curr_speed)
                 line_1 = "Des: %.2f m/s\n" % des_spd_mps
-                line_2 = "Act: %.2f m/s" % curr_spd_mps
+                line_2 = "\nAct: %.2f m/s" % curr_spd_mps
+
+            # print desired motor speed livetime to the LCD module
+            lcd.sendtoLCDThread(target="main", msg=line_1, duration=0, clr_before=False, clr_after=False)
 
             # check the print time
             print_time_stop = time.perf_counter()
 
-            # print useful information about motor speeds
+            # print useful information about motor speeds to terminal
             if ((print_time_stop - print_time_start) >= print_delay):
                 print(control_sig, "|", speed_des, "|", curr_speed)
-                msg = line_1 + line_2
-                lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=False, clr_after=False)
+                lcd.sendtoLCDThread(target="main", msg=line_2, duration=0, clr_before=False, clr_after=False)    # print the actual speeds on a delay
                 print_time_start = time.perf_counter()
 
     except KeyboardInterrupt:

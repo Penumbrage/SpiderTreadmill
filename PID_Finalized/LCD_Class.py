@@ -26,7 +26,7 @@ class LCD(characterlcd.Character_LCD_Mono):
 
         # create two queues (one for the main loop, one for the rotary encoder)
         self.main_q = queue.Queue(maxsize=0)        # infinite queue size
-        self.knob_q = queue.Queue(maxsize=0)
+        self.knob_q = queue.Queue(maxsize=2)        # put a limit on the knob queue (prevent repetitive msgs)
 
         # create two lists to receive items from the above queues
         self.main_item = []
@@ -50,10 +50,11 @@ class LCD(characterlcd.Character_LCD_Mono):
                     self.main_item = self.main_q.get_nowait()
                     self.printfromLCDThread(item = self.main_item)
                 except queue.Empty:
-                    pass              
+                    # NOTE: it is very important to have this delay here or else this thread runs too fast
+                    time.sleep(0.001)
 
     # function that puts a message into the lcd queue
-    # NOTE: this function requires the user to input extra parameters such as 
+    # NOTE: this function requires the user to input extra parameters such as
     #       the desired duration of the message and whether to clear the screen
     #       before/after the message
     def sendtoLCDThread(self, target, msg, duration, clr_before, clr_after):
@@ -65,7 +66,12 @@ class LCD(characterlcd.Character_LCD_Mono):
         if (target == "main"):
             self.main_q.put_nowait(item)
         elif (target == "knob"):
-            self.knob_q.put_nowait(item)
+            try:
+                # try to put message on knob queue
+                self.knob_q.put_nowait(item)
+            except queue.Full:
+                # if knob queue is full, ignore any further messages (likely repetitive)
+                pass
 
     # function that retrieves a message from the queue and prints the message
     # NOTE: this function requires the duration of the print and whether to clear the print
