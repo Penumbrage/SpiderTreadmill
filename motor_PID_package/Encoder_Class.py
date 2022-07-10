@@ -1,4 +1,10 @@
-# This script entails a class that covers the various functions available for the DC motor encoder
+'''
+ * @file    Encoder_Class.py
+ * @author  William Wang
+ * @brief   This script entails a class that covers
+            the various functions available for the
+            DC motor encoder
+'''
 
 # import the required libraries
 import RPi.GPIO as GPIO
@@ -7,13 +13,16 @@ import time
 
 class Encoder(object):
     '''
-    This class deals with setting up and reading the encoder pins provided to
+    DESCRIPTION: This class deals with setting up and reading the encoder pins provided to
     the brushed DC motor. This class allows you to calculate the motor speed
-    via a built-in function.
+    via a built-in function (i.e. calcMotorVelocity()).
+
+    ARGS: ENCA, ENCB (encoder pin definitions on the RPi in BCM form)
     '''
 
-    # instantiation function (sets up the required pins for the encoer to work)
     def __init__(self, ENCA = 23, ENCB = 24):
+        # instantiation function (sets up the required pins for the encoder to work)
+
         self.ENCA = ENCA                        # import the two encoder pins
         self.ENCB = ENCB
         self.pos_i = 0                          # variable that keeps track of encoder counts/direction
@@ -30,9 +39,15 @@ class Encoder(object):
         GPIO.add_event_detect(ENCA, GPIO.BOTH, callback = self.__readEncoderA)
         GPIO.add_event_detect(ENCB, GPIO.BOTH, callback = self.__readEncoderB)
 
-    # Callback function for the encoder (updates the counts/position of the encoder)
-    # NOTE: this callback function is called whenever ENCA is triggered
     def __readEncoderA(self, channel):
+        '''
+        DESCRIPTION: Callback function for the encoder (updates the counts/position of the encoder).
+        NOTE: this callback function is called whenever ENCA is triggered
+
+        ARGS: channel (pin number for the interrupt pin in BCM format)
+        
+        RETURN: NONE
+        '''
 
         # read ENCB when ENCA has been triggered with a rising or falling signal
         a = GPIO.input(self.ENCA)
@@ -58,9 +73,15 @@ class Encoder(object):
         with self.enc_lock:
             self.pos_i = self.pos_i + increment
 
-    # Callback function for the encoder (updates the counts/position of the encoder)
-    # NOTE: this callback function is called whenever ENCB is triggered
     def __readEncoderB(self, channel):
+        '''
+        DESCRIPTION: Callback function for the encoder (updates the counts/position of the encoder).
+        NOTE: this callback function is called whenever ENCB is triggered
+
+        ARGS: channel (pin number for the interrupt pin in BCM format)
+
+        RETURN: NONE
+        '''
 
         # read ENCA when ENCB has been triggered with a rising or falling signal
         a = GPIO.input(self.ENCA)
@@ -86,8 +107,14 @@ class Encoder(object):
         with self.enc_lock:
             self.pos_i = self.pos_i + increment
 
-    # Create function to calculate the motor velocity
     def calcMotorVelocity(self):
+        '''
+        Description: Function to calculate the motor velocity in RPM
+        
+        Args: NONE
+
+        Return: velocity (velocity of the motor in RPM)
+        '''
 
         # calculate motor velocity (in counts/second)
         time_start = time.perf_counter()            # start time for velocity calculation

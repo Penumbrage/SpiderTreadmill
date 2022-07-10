@@ -1,4 +1,9 @@
-# This class entails several functions that obtain the user input regarding changing the motor speed of the DC motor
+'''
+ * @file    User_Input_Class.py
+ * @author  William Wang
+ * @brief   This class entails several functions that obtain the 
+            user input regarding changing the motor speed of the DC motor
+'''
 
 # import required modules
 import queue
@@ -8,12 +13,16 @@ from math import pi
 
 class UserInput(object):
     '''
-    This class entails several functions that run a separate thread which handle user inputs 
-    regarding changing the speed of the DC motor
+    DESCRIPTION: This class entails several functions that run a separate thread which handle user inputs 
+    over the terminal regarding changing the speed of the DC motor
+
+    ARGS: input_mode ("m/s" indicates to input speeds in terms of m/s, "PWM" indicates to input speeds
+    in terms of PWM values (-480 to 480))
     '''
 
-    # instantiation function
     def __init__(self, input_mode):
+        # instantiation function
+        
         self.speed_des_mps = 0          # initially set the desired speed to be 0 m/s
         self.speed_des_RPM = 0          # desired speed in RPM
         self.speed_des_PWM = 0          # desired speed in terms of PWM
@@ -38,8 +47,15 @@ class UserInput(object):
             self.user_input_thread = threading.Thread(target=self.__getUserPWM, daemon=True)
             self.user_input_thread.start()
 
-    # Create function running in child thread that waits for user inputs for speeds
     def __getUserInput(self):
+        '''
+        DESCRIPTION: Function running in child thread that waits for user inputs for speeds in terms of m/s
+
+        ARGS: NONE
+
+        RETURN: NONE
+        '''
+
         # loop that is always waiting for a user input for the speed (running on a separate thread)
         while True:
             try:
@@ -62,8 +78,15 @@ class UserInput(object):
                 print("You did not enter a number in the correct format (check for any unwanted characters, spaces, etc).")
                 print("Please enter your speed again.")
 
-    # Create function running in child thread that waits for user inputs for speeds (in terms of PWM values)
     def __getUserPWM(self):
+        '''
+        DESCRIPTION: Function running in child thread that waits for user inputs for speeds in terms of PWM (-480 to 480)
+
+        ARGS: NONE
+
+        RETURN: NONE
+        '''
+
         # loop that is always waiting for a user input for the speed (running on a separate thread)
         while True:
             try:
@@ -86,8 +109,15 @@ class UserInput(object):
                 print("You did not enter a number in the correct format (check for any unwanted characters, spaces, etc).")
                 print("Please enter your speed again.")
 
-    # Create a function that reads the user input from the queue in the main thread and updates the speed_des variable
     def readUserInput(self):
+        '''
+        DESCRIPTION: Function that reads the user input in terms of PWM from the queue 
+        in the main thread and updates the speed_des variable
+
+        ARGS: NONE
+
+        RETURN: NONE
+        '''
 
         # determine the desired speed from the user (in m/s) and covert it to RPM
         try:
@@ -100,8 +130,15 @@ class UserInput(object):
         except queue.Empty:
             pass
 
-    # Create a function that reads the user input from the queue in the main thread and updates the speed_des variable (for open loop PWM applications)
     def readUserPWM(self):
+        '''
+        DESCRIPTION: Function that reads the user input from the queue in the main thread
+        and updates the speed_des variable (for open loop PWM applications)
+
+        ARGS: NONE
+
+        RETURN: NONE
+        '''
 
         # determine the desired speed from the user
         try:
