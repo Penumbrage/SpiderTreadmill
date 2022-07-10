@@ -25,10 +25,10 @@ def main():
             user_input.readUserPWM()
 
             # obtain the current desired speed
-            speed_des = user_input.speed_des
+            speed_des_PWM = user_input.speed_des_PWM
 
             # send the speed to the motor
-            motors.setSpeeds(speed_des)
+            motors.setSpeeds(speed_des_PWM)
         
     except Exceptions.DriverFault as e:
         print("Driver %s fault!" % e.driver_num)
