@@ -3,7 +3,6 @@
 
 # import required libraries
 import RPi.GPIO as GPIO
-import threading
 from math import pi
 
 class Knob(object):

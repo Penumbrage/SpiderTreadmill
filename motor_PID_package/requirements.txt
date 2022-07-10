@@ -1,0 +1,3 @@
+single_tb9051ftg_rpi
+adafruit-blinka
+adafruit-circuitpython-charlcd
