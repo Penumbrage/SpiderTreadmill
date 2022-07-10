@@ -1,5 +1,9 @@
-# This scripts entails a class that has various functions which allow the user to implement PID control with
-# a DC moter and encoder
+'''
+ * @file    PID_Controller_Class.py
+ * @author  William Wang
+ * @brief   This scripts entails a class that has various functions which 
+            allow the user to implement PID control with a DC moter and encoder
+'''
 
 # import required libraries
 import time
@@ -7,13 +11,17 @@ from math import pi
 
 class MotorPID(object):
     '''
-    This class provides various functions that allow the user to control
+    DESCRIPTION: This class provides various functions that allow the user to control
     a DC motor via PID. Note that this class requires access to motor and
     encoder objects
+
+    ARGS: motor (motor (not motors) object from single_tb9051_motor_driver_rpi), encoder
+    (object from Encoder_Class.py)
     '''
 
-    # instantiation function
     def __init__(self, motor, encoder):
+        # instantiation function
+        
         self.motor = motor          # obtain a motor object
         self.encoder = encoder      # obtain an encoder object
         self.err_prev = 0           # variable that stores the error from the previous iteration of PID function (used for the integral and derivative terms)
@@ -21,8 +29,16 @@ class MotorPID(object):
         self.u_prev = 0             # variable that stores the previous control signal sent to the motor (used to generate new control signal)
         self.time_prev = time.perf_counter()        # variable that stores the previous time for the PID loop (used to calculate deltaT)
 
-    # Create function to execute the PID controller
     def motorPID(self, desired_vel, meas_vel):
+        '''
+        DESCRIPTION: Function that executes the PID controller calculations given desired and actual
+        velocities from the motors
+
+        ARGS: desired_vel (desired velocity from the user in RPM), meas_vel (measured velocity of 
+        the motor in RPM)
+
+        RETURN: u (PWM control signal value sent to the motor driver)
+        '''
 
         # obtain the change in time since the last time this function has been called
         time_curr = time.perf_counter()
@@ -64,8 +80,16 @@ class MotorPID(object):
 
         return u
 
-    # Function used to maintain the motor velocity if the user has not changed the velocity
     def maintainMotorVelocity(self, speed_des):
+        '''
+        DESCRIPTION: Function used to maintain the motor velocity if the user has 
+        not changed the velocity via the terminal or knob
+
+        ARGS: speed_des (desired speed to be maintained in RPM)
+
+        RETURN: control_sig (PWM control signal to be sent to motor driver), curr_speed 
+        (current speed measured from the motor in RPM)
+        '''
 
         # Read in the current motor velocity
         curr_speed = self.encoder.calcMotorVelocity()
@@ -78,15 +102,20 @@ class MotorPID(object):
 
         return control_sig, curr_speed
 
-    # Function used to change the motor velocity when the user specifies a different speed
     def changeMotorVelocity(self, ramp_time, speed_des):
+        '''
+        DESCRIPTION: Function used to change the motor velocity when the user specifies a different speed
+        NOTE: built into this function is the ability to "ramp" from the current velocity to the desired velocity
+        to provide smoother transitions between velocities that also minimize strain of sharp fluctuations of 
+        speed on the motor and the motor driver. This function is only called whenever there is a change in
+        the desired velocity. Otherwise, the main thread will be running the maintainMotorVelocity() function
 
-        # NOTE: built into this function is the ability to "ramp" from the current velocity
-        #       to the desired velocity to provide smoother transitions between velocities
-        #       that also minimize strain of sharp fluctuations of speed on the motor and
-        #       the motor driver. This function is only called whenever there is a change in
-        #       the desired velocity. Otherwise, the main thread will be running the
-        #       maintainMotorVelocity() function
+        ARGS: ramp_time (time in seconds over which to ramp the speed), speed_des (desired speed to change to)
+        
+        RETURN: control_sig (PWM control signal to be sent to motor driver), curr_speed 
+        (current speed measured from the motor in RPM), user_changed_velocity (boolean flag
+        returned in the main loop to verify the user has changed the velocity)
+        '''
 
         # create variable that stores the time elapsed
         time_elapsed = 0
@@ -129,12 +158,24 @@ class MotorPID(object):
 
         return control_sig, curr_speed, user_changed_velocity          # return final control signal and motor velocity and flag
 
-    # function to convert speeds from RPM to m/s
     def RPMToMPS(self, rpm):
+        '''
+        DESCRIPTION: Function to convert speeds from RPM to m/s
+
+        ARGS: rpm (speed in RPM)
+
+        RETURN: mps (speed in m/s)
+        '''
         mps = rpm*(pi/60.0)*(2/39.3701)
         return mps
 
-    # function to convert speeds from m/s to RPM
     def MPSToRPM(self, mps):
+        '''
+        DESCRIPTION: Function to convert speeds from m/s to RPM
+
+        ARGS: mps (speed in m/s)
+        
+        RETURN: rpm (speed in RPM)
+        '''
         rpm = mps*(60/pi)/(2/39.3701)
         return rpm

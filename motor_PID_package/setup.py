@@ -1,4 +1,9 @@
-# Setup script to import all the different classes
+'''
+ * @file    setup.py
+ * @author  William Wang
+ * @brief   Setup script to import all the different classes and any
+            other necessary modules/packages
+'''
 
 from setuptools import setup
 

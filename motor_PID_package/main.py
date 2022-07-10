@@ -1,4 +1,9 @@
-# This script is the main script running the PID controller for the DC motor
+'''
+ * @file    main.py
+ * @author  William Wang
+ * @brief   This script is the main script running the 
+            PID controller for the DC motor
+'''
 
 # import required modules
 from single_tb9051ftg_rpi import Motor, Motors, MAX_SPEED
