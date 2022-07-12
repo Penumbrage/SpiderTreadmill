@@ -56,4 +56,4 @@ class IRBreakBeam(object):
         '''
         with self.beam_lock:            # make sure main thread and callback thread aren't racing
             self.triggered = True
-        print("The beam has been triggered!")
+        print("\nThe beam has been triggered!")

@@ -19,6 +19,9 @@ import time
 import board
 import digitalio
 
+# print start statement for the program to the terminal
+print("Program starting")
+
 # ---------------- Create various objects required for the script --------------------- #
 # Create the LCD object for the LCD screen (requires some setup with the input pins)
 # Size of the LCD
@@ -60,9 +63,11 @@ knob = Knob(user_input=user_input, lcd=lcd, clk=18, dt=25, sw=20)
 if __name__ == '__main__':
 
     try:
-        # print start message
+        # print start message and current step size of the knob
         msg = "Program\nstarting!"
-        lcd.sendtoLCDThread(target="main", msg=msg, duration=5, clr_before=True, clr_after=True)
+        lcd.sendtoLCDThread(target="main", msg=msg, duration=2.5, clr_before=True, clr_after=True)
+        msg = "Curr step size:\n0.1 m/s"
+        lcd.sendtoLCDThread(target="main", msg=msg, duration=2.5, clr_before=True, clr_after=True)
         time.sleep(5)        # synchonize the print statement with the main script
 
         # time delay after which print statements should occur (sec)
@@ -87,6 +92,7 @@ if __name__ == '__main__':
             # set the motor speed determined from user input and current motor speeds (ramping included)
             if (user_changed_velocity):
                 msg = "Ramping speed"
+                print(msg)
                 lcd.sendtoLCDThread(target="main", msg=msg, duration=5, clr_before=True, clr_after=True)
                 control_sig, curr_speed, user_changed_velocity = motor_control.changeMotorVelocity(ramp_time=5, speed_des=speed_des)
                 user_input.user_changed_velocity = user_changed_velocity    # reset flag
@@ -113,7 +119,7 @@ if __name__ == '__main__':
 
             # print useful information about motor speeds to terminal
             if ((print_time_stop - print_time_start) >= print_delay):
-                print(control_sig, "|", speed_des, "|", curr_speed)
+                # print(control_sig, "|", speed_des, "|", curr_speed)
                 lcd.sendtoLCDThread(target="main", msg=line_2, duration=0, clr_before=False, clr_after=False)    # print the actual speeds on a delay
                 print_time_start = time.perf_counter()
 
@@ -126,13 +132,17 @@ if __name__ == '__main__':
         speed_des = 0
         motor_control.changeMotorVelocity(ramp_time=2, speed_des=speed_des)
 
+        # add delay to allow the message to print the LCD screen
+        time.sleep(0.2)
+
     except Exceptions.DriverFault as e:
-        print("Driver %s fault!" % e.driver_num)
+        print("\nDriver %s fault!" % e.driver_num)
         msg = ("Driver %s fault!" % e.driver_num)
         lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=False)
+        time.sleep(0.2)        # add delay to allow fault to print to LCD
 
     except Exceptions.BeamFault as b:
-        print(f"IR sensor on pin {b.pin_num} is broken or has been triggered!")
+        print(f"\nIR sensor on pin {b.pin_num} is broken or has been triggered!")
         msg = ("IR %s triggered!" % b.pin_num)
         lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=False)
         print("Motor shutting down!")
@@ -140,6 +150,8 @@ if __name__ == '__main__':
         # slow the motor down to a halt
         speed_des = 0
         motor_control.changeMotorVelocity(ramp_time=2, speed_des=speed_des)
+
+        # add delay to allow message to print to LCD screen
 
     finally:
         GPIO.cleanup()

@@ -59,20 +59,26 @@ class UserInput(object):
         # loop that is always waiting for a user input for the speed (running on a separate thread)
         while True:
             try:
-                # obtain the user input for the motor speed
-                user_input = input('Enter a motor speed in meters/second (range from [-1.5, 1.5] m/s): ')
+                # if statement prevents user from inputting new speeds until the ramp has completed
+                if not self.user_changed_velocity:
+                    # obtain the user input for the motor speed
+                    user_input = input('Enter a motor speed in meters/second (range from [-1.5, 1.5] m/s): ')
 
-                # try to turn the input into a float (will throw an exception if it doesn't work)
-                user_input = float(user_input)
+                    # try to turn the input into a float (will throw an exception if it doesn't work)
+                    user_input = float(user_input)
 
-                # check the number to see if it is in the correct range (0 m/s to 1.5 m/s)
-                if not ((user_input >= -1.5) and (user_input <= 1.5)):
-                    print("The speed you entered is not within the specified range. Please enter a new speed.")
+                    # check the number to see if it is in the correct range (0 m/s to 1.5 m/s)
+                    if not ((user_input >= -1.5) and (user_input <= 1.5)):
+                        print("The speed you entered is not within the specified range. Please enter a new speed.")
+                    else:
+                        self.q.put(user_input)       # put the user-defined speed on the queue in m/s
+
+                    # wait for a bit to allow the confirmation statement to print
+                    time.sleep(0.2)
+
                 else:
-                    self.q.put(user_input)       # put the user-defined speed on the queue in m/s
-
-                # After successfully sending a user input, wait a bit before sending the next input
-                time.sleep(0.2)
+                    # Wait for some time to prevent thread from using too many resources
+                    time.sleep(0.001)
 
             except ValueError:
                 print("You did not enter a number in the correct format (check for any unwanted characters, spaces, etc).")
