@@ -13,55 +13,63 @@ from PID_Controller_Class import MotorPID
 from User_Input_Class import UserInput
 from Knob_Class import Knob
 from LCD_Class import LCD
+from Buttons_Class import StartStopButton
 import Exceptions
 import RPi.GPIO as GPIO
 import time
 import board
 import digitalio
 
-# print start statement for the program to the terminal
-print("Program starting")
+def main():
+    '''
+    DESCRIPTION: main function that executes the treadmill script
 
-# ---------------- Create various objects required for the script --------------------- #
-# Create the LCD object for the LCD screen (requires some setup with the input pins)
-# Size of the LCD
-lcd_columns = 16
-lcd_rows = 2
+    ARGS: NONE
 
-# pin definitions for the LCD
-lcd_rs = digitalio.DigitalInOut(board.D2)
-lcd_en = digitalio.DigitalInOut(board.D3)
-lcd_d4 = digitalio.DigitalInOut(board.D17)
-lcd_d5 = digitalio.DigitalInOut(board.D27)
-lcd_d6 = digitalio.DigitalInOut(board.D22)
-lcd_d7 = digitalio.DigitalInOut(board.D10)
+    RETURN: NONE
+    '''
 
-# Initialise the lcd class
-lcd = LCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6,
-                                      lcd_d7, lcd_columns, lcd_rows)
+    # print start statement for the program to the terminal
+    print("Program starting")
 
-# Create the Motor and Motors objects
-motor1 = Motor(pwm1_pin=12, pwm2_pin=13, en_pin=4, enb_pin=5, diag_pin=6)
-motors = Motors(motor1)
+    # ---------------- Create various objects required for the script --------------------- #
+    # Create the LCD object for the LCD screen (requires some setup with the input pins)
+    # Size of the LCD
+    lcd_columns = 16
+    lcd_rows = 2
 
-# Create an encoder object
-encoder = Encoder(ENCA=23, ENCB=24)
+    # pin definitions for the LCD
+    lcd_rs = digitalio.DigitalInOut(board.D2)
+    lcd_en = digitalio.DigitalInOut(board.D3)
+    lcd_d4 = digitalio.DigitalInOut(board.D17)
+    lcd_d5 = digitalio.DigitalInOut(board.D27)
+    lcd_d6 = digitalio.DigitalInOut(board.D22)
+    lcd_d7 = digitalio.DigitalInOut(board.D10)
 
-# Create an IR break beam sensor object
-IR_sen = IRBreakBeam(beam_pin=21)
+    # Initialise the lcd class
+    lcd = LCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6,
+                                        lcd_d7, lcd_columns, lcd_rows)
 
-# Create a PID control object
-motor_control = MotorPID(motor=motor1, encoder=encoder)
+    # Create the Motor and Motors objects
+    motor1 = Motor(pwm1_pin=12, pwm2_pin=13, en_pin=4, enb_pin=5, diag_pin=6)
+    motors = Motors(motor1)
 
-# Create user input object
-user_input = UserInput(input_mode='m/s')
+    # Create an encoder object
+    encoder = Encoder(ENCA=23, ENCB=24)
 
-# Create object for the knob (requires the user_input object)
-knob = Knob(user_input=user_input, lcd=lcd, clk=18, dt=25, sw=20)
+    # Create an IR break beam sensor object
+    IR_sen = IRBreakBeam(beam_pin=21)
 
-# Main execution loop for the script
-if __name__ == '__main__':
+    # Create a PID control object
+    motor_control = MotorPID(motor=motor1, encoder=encoder)
 
+    # Create user input object
+    user_input = UserInput(input_mode='m/s')
+
+    # Create object for the knob (requires the user_input object)
+    knob = Knob(user_input=user_input, lcd=lcd, clk=18, dt=25, sw=20)
+
+    # execute the main loop for the treadmill
     try:
         # print start message and current step size of the knob
         msg = "Program\nstarting!"
@@ -159,3 +167,8 @@ if __name__ == '__main__':
         motors.forceStop()
         print("Motors stopped")
         print("Program exited")
+
+
+# Execute the main function
+if __name__ == '__main__':
+    main()  
