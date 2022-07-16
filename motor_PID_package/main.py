@@ -32,6 +32,9 @@ def main():
     RETURN: NONE
     '''
 
+    # pass in the start_button as a global variable
+    global start_button
+
     # print start statement for the program to the terminal
     print("Program starting")
 
@@ -213,6 +216,7 @@ def main():
 # Execute the main function
 if __name__ == '__main__':
     # Execute an infinite loop that runs as a background service
+
     while True:
         # get the state for the start_stop button (to see if we should start the main program)
         with start_button.start_stop_lock:
@@ -221,6 +225,6 @@ if __name__ == '__main__':
         if program_started == True:
             # only execute the main program if the start button has been pressed
             main()  
-        elif program_started == False:
-            # reinstantiate the start_button because the main() function cleans up the GPIO
-            start_button = StartStopButton(button_pin=9)
+
+            # break out of the while loop (the service will restart the entire script)
+            break     
