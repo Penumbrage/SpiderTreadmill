@@ -42,12 +42,12 @@ class Knob(object):
         # set the clk, dt, and sw pins as inputs
         GPIO.setup(clk, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         GPIO.setup(dt, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(sw, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(sw, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
         #set up the interrupts for each pin
         GPIO.add_event_detect(clk, GPIO.FALLING, callback=self.__clkClicked, bouncetime=100)
         GPIO.add_event_detect(dt, GPIO.FALLING, callback=self.__dtClicked, bouncetime=100)
-        GPIO.add_event_detect(sw, GPIO.RISING, callback=self.__swClicked, bouncetime=500)
+        GPIO.add_event_detect(sw, GPIO.FALLING, callback=self.__swClicked, bouncetime=500)
 
     def __clkClicked(self, channel):
         '''
@@ -103,13 +103,14 @@ class Knob(object):
 
         RETURN: NONE
         '''
+        
         # start the timer to see how long the button has been held
         self.button_start_time = time.perf_counter()
 
         # check the button state
         button_state = GPIO.input(self.sw)
 
-        while button_state == True:
+        while button_state == False:
             # check how long the button has been held
             time_held = time.perf_counter() - self.button_start_time
 
@@ -121,6 +122,8 @@ class Knob(object):
 
             # update the button_state
             button_state = GPIO.input(self.sw)
+
+            print(time_held)
 
         else:
             # NOTE: above, button_state will remain true as long as we hold it, if the time_held surpasses 5 seconds
