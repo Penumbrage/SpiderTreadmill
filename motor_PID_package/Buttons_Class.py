@@ -70,7 +70,7 @@ class StartStopButton(Button):
         # setup an interrupt on the desired pin 
         GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__start_stop_function, bouncetime=100)
 
-    def __start_stop_function(self):
+    def __start_stop_function(self, channel):
         '''
         DESCRIPTION: Function that changes the state of the program_started variable, which is used
         to control whether or not the main function should be executed

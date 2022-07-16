@@ -138,9 +138,14 @@ def main():
                 print_time_start = time.perf_counter()
 
     except KeyboardInterrupt:
+        # print stop messages
         print("\nKeyboard Interrupt")
         msg = "Program stopped!"
         lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=False)
+
+        # reset the program_start variable
+        with start_button.start_stop_lock:
+            start_button.program_started = False
 
         # slow the motor down so that it does not stop abruptly
         speed_des = 0
@@ -150,9 +155,14 @@ def main():
         time.sleep(0.2)
 
     except Exceptions.ProgramStopped as p:
+        # print stop messages
         msg = "Program stopped!"
         print("\n" + msg)
         lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=True)
+
+        # reset the program_start variable
+        with start_button.start_stop_lock:
+            start_button.program_started = False
 
         # slow the motor down to a halt
         speed_des = 0
@@ -162,16 +172,28 @@ def main():
         time.sleep(0.2)
 
     except Exceptions.DriverFault as e:
+        # print messages
         print("\nDriver %s fault!" % e.driver_num)
         msg = ("Driver %s fault!" % e.driver_num)
         lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=False)
-        time.sleep(0.2)        # add delay to allow fault to print to LCD
+
+        # reset the program_started variable
+        with start_button.start_stop_lock:
+            start_button.program_started = False
+
+        # add delay to allow fault to print to LCD
+        time.sleep(0.2)
 
     except Exceptions.BeamFault as b:
+        # print messages
         print(f"\nIR sensor on pin {b.pin_num} is broken or has been triggered!")
         msg = ("IR %s triggered!" % b.pin_num)
         lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=False)
         print("Motor shutting down!")
+
+        # reset the program_started variable
+        with start_button.start_stop_lock:
+            start_button.program_started = False
 
         # slow the motor down to a halt
         speed_des = 0
