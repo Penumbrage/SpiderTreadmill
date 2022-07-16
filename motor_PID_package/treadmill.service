@@ -6,7 +6,7 @@ After=multi-user.target
 Type=idle
 
 User=pi
-ExecStart=/usr/bin/python3 /home/pi/SpiderTreadmill/motor_PID_package/main.py
+ExecStart=/usr/bin/python3 /home/pi/Documents/SpiderTreadmill/motor_PID_package/main.py
 
 Restart=always
 RestartSec=2

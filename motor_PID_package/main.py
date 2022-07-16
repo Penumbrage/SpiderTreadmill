@@ -161,7 +161,7 @@ def main():
         # print stop messages
         msg = "Program stopped!"
         print("\n" + msg)
-        lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=True)
+        lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=False)
 
         # reset the program_start variable
         with start_button.start_stop_lock:
