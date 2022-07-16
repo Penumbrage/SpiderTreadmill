@@ -13,7 +13,7 @@ BUTTON_PIN = 9
 GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 # Define button callback function
-def button_function():
+def button_function(channel):
     # read in the button state
     button_state = GPIO.input(BUTTON_PIN)
 
@@ -27,10 +27,9 @@ def button_function():
 GPIO.add_event_detect(BUTTON_PIN, GPIO.BOTH, callback = button_function, bouncetime = 100)
 
 # Create an infinite loop to run the function
-while True:
-    try:
-        input("Press any key to exit the program: ")
-    except KeyboardInterrupt:
-        print("\nKeyboard Interrupt")
-    finally:
-        GPIO.cleanup()
+try:
+    input("Press any key to exit the program: ")
+except KeyboardInterrupt:
+    print("\nKeyboard Interrupt")
+finally:
+    GPIO.cleanup()
