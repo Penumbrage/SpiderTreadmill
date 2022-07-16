@@ -26,6 +26,8 @@ class UserInput(object):
         self.speed_des_mps = 0          # initially set the desired speed to be 0 m/s
         self.speed_des_RPM = 0          # desired speed in RPM
         self.speed_des_PWM = 0          # desired speed in terms of PWM
+        self.preset_speed_mps = 0       # stores the preset speed in terms of m/s
+        self.preset_speed_RPM = 0       # stores the preset speed in terms of RPM
         self.speed_des_lock = threading.Lock()      # lock used to access any of the speed_des variables
         self.user_changed_velocity = False          # initially set the motor to maintain velocities
         self.q = queue.Queue()      # queue used to pass information from the user input to the motors

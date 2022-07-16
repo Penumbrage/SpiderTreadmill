@@ -114,10 +114,24 @@ class Knob(object):
             # check how long the button has been held
             time_held = time.perf_counter() - self.button_start_time
 
-            # if the time is greater than 5 seconds, then set the preset time
+            # if the time is greater than 5 seconds, then set the preset speed and send the current motor speed back to zero
             if (time_held >= 5):
-                msg="Preset speed"
+                with self.user_input.speed_des_lock:
+                    # set the preset speed (for both m/s and RPM)
+                    self.user_input.preset_speed_mps = self.user_input.speed_des_mps
+                    self.user_input.preset_speed_RPM = self.user_input.preset_speed_mps*(60/pi)/(2/39.3701)
+
+                    # send the motor back to zero velocity (in preparation for any trials with the preset speed)
+                    self.user_input.speed_des_mps = 0
+                    self.user_input.speed_des_RPM = 0
+                    self.user_input.user_changed_velocity = True        # allows the system to ramp the speed down
+
+                # send message to LCD and terminal notifying of preset speed update
+                msg="Preset speed of:\n%.2f m/s" % self.user_input.preset_speed_mps
+                print(msg)
                 self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
+
+                # break form the while loop to prevent any further updates to the preset speed
                 break
 
             # update the button_state
