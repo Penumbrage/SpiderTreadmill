@@ -20,6 +20,9 @@ import time
 import board
 import digitalio
 
+# Create a StartStopButton object which will be used to start/stop the main function via a service
+start_button = StartStopButton(button_pin=9)
+
 def main():
     '''
     DESCRIPTION: main function that executes the treadmill script
@@ -88,6 +91,9 @@ def main():
             # test for driver faults
             Exceptions.raiseIfFault(motors=motors)
 
+            # test to see if the user stopped the program with the button
+            Exceptions.raiseIfProgramStopped(start_stop_button=start_button)
+
             # test the break beam sensor so that it isn't broken
             Exceptions.raiseIfBeamBroken(IR_sen=IR_sen)
 
@@ -143,6 +149,18 @@ def main():
         # add delay to allow the message to print the LCD screen
         time.sleep(0.2)
 
+    except Exceptions.ProgramStopped as p:
+        msg = "Program stopped!"
+        print("\n" + msg)
+        lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=True)
+
+        # slow the motor down to a halt
+        speed_des = 0
+        motor_control.changeMotorVelocity(ramp_time=2, speed_des=speed_des)
+
+        # add delay to allow exception to print to LCD
+        time.sleep(0.2)
+
     except Exceptions.DriverFault as e:
         print("\nDriver %s fault!" % e.driver_num)
         msg = ("Driver %s fault!" % e.driver_num)
@@ -160,6 +178,7 @@ def main():
         motor_control.changeMotorVelocity(ramp_time=2, speed_des=speed_des)
 
         # add delay to allow message to print to LCD screen
+        time.sleep(0.2)
 
     finally:
         GPIO.cleanup()
@@ -171,4 +190,12 @@ def main():
 
 # Execute the main function
 if __name__ == '__main__':
-    main()  
+    # Execute an infinite loop that runs as a background service
+    while True:
+        # get the state for the start_stop button (to see if we should start the main program)
+        with start_button.start_stop_lock:
+            program_started = start_button.program_started
+    
+        # only execute the main program if the start button has been pressed
+        if program_started == True:
+            main()  
