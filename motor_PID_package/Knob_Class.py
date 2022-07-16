@@ -10,6 +10,7 @@
 # import required libraries
 import RPi.GPIO as GPIO
 from math import pi
+import time
 
 class Knob(object):
     '''
@@ -33,6 +34,7 @@ class Knob(object):
         self.sw = sw                        # pin for the push button switch
         self.step_size = 0.1                # setup default step size for the encoder (0.1 m/s)
         self.button_pressed = False         # default state for the button is false
+        self.button_start_time = 0          # start times to figure out how long the button has been pressed     
 
         # set the GPIO mode
         GPIO.setmode(GPIO.BCM)
@@ -40,12 +42,12 @@ class Knob(object):
         # set the clk, dt, and sw pins as inputs
         GPIO.setup(clk, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         GPIO.setup(dt, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(sw, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(sw, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
         #set up the interrupts for each pin
         GPIO.add_event_detect(clk, GPIO.FALLING, callback=self.__clkClicked, bouncetime=100)
         GPIO.add_event_detect(dt, GPIO.FALLING, callback=self.__dtClicked, bouncetime=100)
-        GPIO.add_event_detect(sw, GPIO.FALLING, callback=self.__swClicked, bouncetime=300)
+        GPIO.add_event_detect(sw, GPIO.RISING, callback=self.__swClicked, bouncetime=500)
 
     def __clkClicked(self, channel):
         '''
@@ -95,23 +97,46 @@ class Knob(object):
 
     def __swClicked(self, channel):
         '''
-        DESCRIPTION: Callback function that is called whenever the switch is pressed (used to update the increment size)
+        DESCRIPTION: Callback function that is called whenever the switch is pressed (used to update the increment size or preset speeds)
 
         ARGS: channel (pin number for the sw pin)
 
         RETURN: NONE
         '''
+        # start the timer to see how long the button has been held
+        self.button_start_time = time.perf_counter()
 
-        # when the button is pressed change the state of the button variable
-        self.button_pressed = not self.button_pressed
+        # check the button state
+        button_state = GPIO.input(self.sw)
 
-        # if the button state is True, then the step size for speed_des is 0.01 m/s
-        if self.button_pressed:
-            self.step_size = 0.01
-            msg = "Curr step size:\n0.01 m/s"
-            self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
-        # if button state is False, then the step size for speed_des is 0.1 m/s
+        while button_state == True:
+            # check how long the button has been held
+            time_held = time.perf_counter() - self.button_start_time
+
+            # if the time is greater than 5 seconds, then set the preset time
+            if (time_held >= 5):
+                msg="Preset speed"
+                self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
+                break
+
+            # update the button_state
+            button_state = GPIO.input(self.sw)
+
         else:
-            self.step_size = 0.1
-            msg = "Curr step size:\n0.1 m/s"
-            self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
+            # NOTE: above, button_state will remain true as long as we hold it, if the time_held surpasses 5 seconds
+            #       we update the preset speed. However, if the user lets go before 5 seconds is up, then the else 
+            #       statement below is executed where the increments are updated instead
+
+            # when the button is pressed change the state of the button variable
+            self.button_pressed = not self.button_pressed
+
+            # if the button state is True, then the step size for speed_des is 0.01 m/s
+            if self.button_pressed:
+                self.step_size = 0.01
+                msg = "Curr step size:\n0.01 m/s"
+                self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
+            # if button state is False, then the step size for speed_des is 0.1 m/s
+            else:
+                self.step_size = 0.1
+                msg = "Curr step size:\n0.1 m/s"
+                self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
