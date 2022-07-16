@@ -218,6 +218,9 @@ if __name__ == '__main__':
         with start_button.start_stop_lock:
             program_started = start_button.program_started
     
-        # only execute the main program if the start button has been pressed
         if program_started == True:
+            # only execute the main program if the start button has been pressed
             main()  
+        elif program_started == False:
+            # reinstantiate the start_button because the main() function cleans up the GPIO
+            start_button = StartStopButton(button_pin=9)
