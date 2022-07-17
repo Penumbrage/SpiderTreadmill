@@ -13,7 +13,7 @@ from PID_Controller_Class import MotorPID
 from User_Input_Class import UserInput
 from Knob_Class import Knob
 from LCD_Class import LCD
-from Buttons_Class import StartStopButton
+import Buttons_Class
 import Exceptions
 import RPi.GPIO as GPIO
 import time
@@ -21,7 +21,7 @@ import board
 import digitalio
 
 # Create a StartStopButton object which will be used to start/stop the main function via a service
-start_button = StartStopButton(button_pin=9)
+start_button = Buttons_Class.StartStopButton(button_pin=9)
 
 def main():
     '''
@@ -74,6 +74,9 @@ def main():
 
     # Create object for the knob (requires the user_input object)
     knob = Knob(user_input=user_input, lcd=lcd, clk=18, dt=25, sw=20)
+
+    # Create object for the preset speed button (requires the user_input object)
+    preset_speed_button = Buttons_Class.PresetSpeedButton(button_pin=11, user_input=user_input)
 
     # execute the main loop for the treadmill
     try:

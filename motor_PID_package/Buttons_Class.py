@@ -51,7 +51,7 @@ class Button(object):
 
 class StartStopButton(Button):
     '''
-    DESCRIPTION: This class is based of the base button class and contains various
+    DESCRIPTION: This class is based off the base button class and contains various
     functions that deal with starting and stopping the main.py script via a background
     service
 
@@ -65,7 +65,7 @@ class StartStopButton(Button):
         super().__init__(button_pin)
 
         self.program_started = False                # variable to store start/stop state of the program
-        self.start_stop_lock = threading.Lock()     # lock for the program_started variable (because the main loop needa access to this variable)
+        self.start_stop_lock = threading.Lock()     # lock for the program_started variable (because the main loop needs access to this variable)
 
         # setup an interrupt on the desired pin 
         GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__start_stop_function, bouncetime=100)
@@ -83,3 +83,49 @@ class StartStopButton(Button):
         # switch the program_started variable's state when the button is pressed
         with self.start_stop_lock:
             self.program_started = not self.program_started
+
+class PresetSpeedButton(Button):
+    '''
+    DESCRIPTION: This class is based of the base Button class and is used to define various
+    functions that are used with the PresetSpeedButton. This button is used save the current 
+    displayed desired speed as the preset speed for any test trials
+
+    ARGS: button_pin (pin number that the button is connected to), user_input (User_Input_Class object
+    which needs to be accessed in order to update the desired speed)
+    '''
+    def __init__(self, button_pin, user_input):
+        # initializaition function for the StartStopButton class
+
+        # obtain original init function
+        super().__init__(button_pin)
+
+        self.user_input = user_input        # store the user_input object to update speed_des
+
+        # setup an interrupt on the desired pin 
+        GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__set_preset_speed, bouncetime=100)
+
+    def __set_preset_speed(self):
+        '''
+        DESCRIPTION: Callback function that saves the current speed_des_mps as the preset speed for any 
+        future experiments. This function also ramps the speed back down to zero.
+
+        ARGS: NONE
+
+        RETURN: NONE
+        '''
+
+        with self.user_input.speed_des_lock:
+            # set the preset speed (for both m/s and RPM)
+            self.user_input.preset_speed_mps = self.user_input.speed_des_mps
+            self.user_input.preset_speed_RPM = self.user_input.preset_speed_mps*(60/pi)/(2/39.3701)
+
+            # send the motor back to zero velocity (in preparation for any trials with the preset speed)
+            self.user_input.speed_des_mps = 0
+            self.user_input.speed_des_RPM = 0
+            self.user_input.user_changed_velocity = True        # allows the system to ramp the speed down
+
+        # send message to LCD and terminal notifying of preset speed update
+        msg="Preset speed of:\n%.2f m/s" % self.user_input.preset_speed_mps
+        print(msg)
+        self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
+        
