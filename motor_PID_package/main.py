@@ -76,7 +76,7 @@ def main():
     knob = Knob(user_input=user_input, lcd=lcd, clk=18, dt=25, sw=20)
 
     # Create object for the preset speed button (requires the user_input object)
-    preset_speed_button = Buttons_Class.PresetSpeedButton(button_pin=11, user_input=user_input)
+    preset_speed_button = Buttons_Class.PresetSpeedButton(button_pin=11, user_input=user_input, lcd=lcd)
 
     # execute the main loop for the treadmill
     try:

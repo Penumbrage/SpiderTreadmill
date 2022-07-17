@@ -9,6 +9,7 @@
 # import the required libraries
 import RPi.GPIO as GPIO
 import threading
+from math import pi
 
 class Button(object):
     '''
@@ -91,20 +92,22 @@ class PresetSpeedButton(Button):
     displayed desired speed as the preset speed for any test trials
 
     ARGS: button_pin (pin number that the button is connected to), user_input (User_Input_Class object
-    which needs to be accessed in order to update the desired speed)
+    which needs to be accessed in order to update the desired speed), lcd (lcd object from the LCD_Class
+    used to allow this button to print messages to the LCD)
     '''
-    def __init__(self, button_pin, user_input):
+    def __init__(self, button_pin, user_input, lcd):
         # initializaition function for the StartStopButton class
 
         # obtain original init function
         super().__init__(button_pin)
 
         self.user_input = user_input        # store the user_input object to update speed_des
+        self.lcd = lcd                      # store the lcd object to update the lcd
 
         # setup an interrupt on the desired pin 
         GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__set_preset_speed, bouncetime=100)
 
-    def __set_preset_speed(self):
+    def __set_preset_speed(self, channel):
         '''
         DESCRIPTION: Callback function that saves the current speed_des_mps as the preset speed for any 
         future experiments. This function also ramps the speed back down to zero.
