@@ -12,6 +12,7 @@ import RPi.GPIO as GPIO
 from math import pi
 import time
 import threading
+import queue
 
 class Knob(object):
     '''
@@ -37,7 +38,7 @@ class Knob(object):
         self.button_inc_state = False               # default state for the button increment is false
         self.button_pressed = False                 # boolean value that changes when the button callback is called
         self.button_start_time = 0                  # start times to figure out how long the button has been pressed
-        self.knob_thread_lock = threading.Lock()    # lock that protects access to the button_pressed variable (accessed by both callback thread and knob_thread)   
+        #self.knob_thread_queue = queue.Queue()      # queue that holds the state of the button_pressed boolean 
 
         # set the GPIO mode
         GPIO.setmode(GPIO.BCM)
@@ -54,6 +55,7 @@ class Knob(object):
 
         # start knob thread to evalutate button presses
         self.knob_thread = threading.Thread(target=self.__button_thread_function, daemon=True)
+        self.knob_thread.start()
 
     def __button_thread_function(self):
         '''
@@ -70,13 +72,14 @@ class Knob(object):
         # infinite loop running as separate thread checking the duration of the user button press
         while True:
             # check to see if the button has been pressed and start checking the pressed type if so
-            with self.knob_thread_lock:
-                if self.button_pressed == True:
-                    self.__det_press_type()     # determine the press type and take appropriate actions
-                    self.button_pressed = False # then, reset the button_pressed variable to let the callback function know it can take other readings
-                # have the loop do nothing if the button hasn't been pressed
-                else:
-                    time.sleep(0.001)
+            if self.button_pressed == True:
+                self.__det_press_type()             # determine the press type and take appropriate actions
+                self.button_pressed = False         # then, reset the button_pressed variable to let the callback function know it can take other readings
+                GPIO.add_event_detect(self.sw, GPIO.FALLING, callback=self.__swClicked, bouncetime=500)      # readd the interrupt
+
+            # have the loop do nothing if the button hasn't been pressed
+            else:
+                time.sleep(0.001)
 
     def __det_press_type(self):
         '''
@@ -197,11 +200,8 @@ class Knob(object):
 
         RETURN: NONE
         '''
-
-        # first check if the button has been pressed before and do nothing if so (because
-        # the knob_thread will be evaluating the button state at this point)
-        with self.knob_thread_lock:
-            if self.button_pressed == True:
-                pass
-            elif self.button_pressed == False:      # if the previous button press has been handled, then let the knob thread know the button has been pressed
-                self.button_pressed = True
+        
+        # if the button has not been pressed, then notify the knob thread that the button has been pressed
+        if self.button_pressed == False:
+            self.button_pressed = True          # update button state
+            GPIO.remove_event_detect(self.sw)   # remove the interrupt on the current channel to prevent possible false readings
