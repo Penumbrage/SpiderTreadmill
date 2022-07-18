@@ -119,17 +119,23 @@ def main():
 
             # set the motor speed determined from user input and current motor speeds (ramping included)
             if (user_changed_velocity):
-                msg = "Ramping speed"
-                print(msg)
+                # convert desired speed to m/s to inform the user what speed they are ramping to
+                des_spd_mps = motor_control.RPMToMPS(speed_des)
+
+                # print message that the speed is ramping
+                print("Ramping speed to: %.2f m/s" % des_spd_mps)
+                msg = "Ramping speed to:\n%.2f m/s" % des_spd_mps
                 lcd.sendtoLCDThread(target="main", msg=msg, duration=5, clr_before=True, clr_after=True)
+
+                # change the motor velocity
                 control_sig, curr_speed, user_changed_velocity = motor_control.changeMotorVelocity(ramp_time=5, speed_des=speed_des)
                 user_input.user_changed_velocity = user_changed_velocity    # reset flag
 
                 # convert desired and current speeds back to m/s and print to the LCD
-                des_spd_mps = motor_control.RPMToMPS(speed_des)
                 curr_spd_mps = motor_control.RPMToMPS(curr_speed)
                 line_1 = "Des: %.2f m/s" % des_spd_mps
                 line_2 = "\nAct: %.2f m/s" % curr_spd_mps
+                
             else:
                 control_sig, curr_speed = motor_control.maintainMotorVelocity(speed_des=speed_des)
 

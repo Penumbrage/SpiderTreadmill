@@ -193,7 +193,7 @@ class MotorPID(object):
 
             # print trial ended messages
             print("\nExperiment stopped")
-            msg = "Trial stopping"
+            msg = "Trial stopped"
             self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
 
         return control_sig, curr_speed, user_changed_velocity          # return final control signal and motor velocity and flag

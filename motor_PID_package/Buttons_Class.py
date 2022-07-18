@@ -126,8 +126,8 @@ class PresetSpeedButton(Button):
         self.user_input.sendSpeedToZero()
 
         # send message to LCD and terminal notifying of preset speed update
+        print("\nPreset speed of: %.2f m/s" % self.user_input.preset_speed_mps)
         msg="Preset speed of:\n%.2f m/s" % self.user_input.preset_speed_mps
-        print(msg)
         self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
         
 class ExperimentButton(Button):
@@ -193,7 +193,7 @@ class ExperimentButton(Button):
 
             # print important messages to the terminal and the LCD
             print("\nExperiment started")
-            print("To spd: %.2f m/s" % self.user_input.preset_speed_mps)
+            print("To speed: %.2f m/s" % self.user_input.preset_speed_mps)
             msg = "Trial started\nTo spd: %.2f m/s" % self.user_input.preset_speed_mps
             self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
         
@@ -216,3 +216,8 @@ class ExperimentButton(Button):
 
             # NOTE: in order for the order of messages to make sense, the messages that indicate the trial
             #       has ended are printed in the PID_Controller_Class after the ramp_down has been performed
+
+            # print message that the trial is ending (not ended, which occurs in the PID_Controller_Class)
+            print("\nExperiment stopping")
+            msg = "Trial stopping"
+            self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
