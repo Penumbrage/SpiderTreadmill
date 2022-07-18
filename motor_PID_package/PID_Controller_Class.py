@@ -16,10 +16,10 @@ class MotorPID(object):
     encoder objects
 
     ARGS: motor (motor (not motors) object from single_tb9051_motor_driver_rpi), encoder
-    (object from Encoder_Class.py)
+    (object from Encoder_Class.py), data_logger (ojbect from the Data_Collection_Class)
     '''
 
-    def __init__(self, motor, encoder):
+    def __init__(self, motor, encoder, data_logger, exp_button):
         # instantiation function
         
         self.motor = motor          # obtain a motor object
@@ -28,6 +28,8 @@ class MotorPID(object):
         self.err_sum = 0            # variable that stores the integral sum of the error for the integral term of the PID
         self.u_prev = 0             # variable that stores the previous control signal sent to the motor (used to generate new control signal)
         self.time_prev = time.perf_counter()        # variable that stores the previous time for the PID loop (used to calculate deltaT)
+        self.data_logger = data_logger              # access the data_logger variable in order to be able to log the speeds to the .csv file for experiments
+        self.exp_button = exp_button                # access the exp_button object in order to know when to log data
 
     def motorPID(self, desired_vel, meas_vel):
         '''
@@ -83,7 +85,8 @@ class MotorPID(object):
     def maintainMotorVelocity(self, speed_des):
         '''
         DESCRIPTION: Function used to maintain the motor velocity if the user has 
-        not changed the velocity via the terminal or knob
+        not changed the velocity via the terminal or knob. Note that this function
+        has built-in checks if an experiment has started.
 
         ARGS: speed_des (desired speed to be maintained in RPM)
 
@@ -100,11 +103,24 @@ class MotorPID(object):
         # send the control signal to the motor
         self.motor.setSpeed(control_sig)
 
+        # save the data if necessary
+        if self.exp_button.trial_started == True:
+            # determine time elapsed
+            elapsed_time = self.data_logger.det_elasped_time()
+
+            # convert speeds to m/s
+            speed_des_mps = self.RPMToMPS(speed_des)
+            curr_speed_mps = self.RPMToMPS(curr_speed)
+
+            # save the data
+            self.data_logger.save_data(data=[elapsed_time, speed_des_mps, curr_speed_mps])
+
         return control_sig, curr_speed
 
     def changeMotorVelocity(self, ramp_time, speed_des):
         '''
-        DESCRIPTION: Function used to change the motor velocity when the user specifies a different speed
+        DESCRIPTION: Function used to change the motor velocity when the user specifies a different speed. This
+        function will also save data to a csv file if a trial has begun
         NOTE: built into this function is the ability to "ramp" from the current velocity to the desired velocity
         to provide smoother transitions between velocities that also minimize strain of sharp fluctuations of 
         speed on the motor and the motor driver. This function is only called whenever there is a change in
@@ -149,6 +165,18 @@ class MotorPID(object):
             # clock the time elaspsed
             stop_time = time.perf_counter()
             time_elapsed = stop_time - start_time
+
+            # save data if necessary
+            if self.exp_button.trial_started == True:
+                # determine time elapsed
+                elapsed_time = self.data_logger.det_elasped_time()
+
+                # convert speeds to m/s
+                speed_des_mps = self.RPMToMPS(ramp_vel)
+                curr_speed_mps = self.RPMToMPS(curr_speed)
+
+                # save the data
+                self.data_logger.save_data(data=[elapsed_time, speed_des_mps, curr_speed_mps])
 
             # obtain new speed for the motor
             curr_speed = self.encoder.calcMotorVelocity()

@@ -67,9 +67,6 @@ def main():
     # Create an IR break beam sensor object
     IR_sen = IRBreakBeam(beam_pin=21)
 
-    # Create a PID control object
-    motor_control = MotorPID(motor=motor1, encoder=encoder)
-
     # Create user input object
     user_input = UserInput(input_mode='m/s')
 
@@ -85,6 +82,9 @@ def main():
     # Create object for the experiment button
     exp_button = Buttons_Class.ExperimentButton(button_pin=19, camera_pin=26, data_collector=data_logger,
                                                         user_input=user_input, lcd=lcd)
+
+    # Create a PID control object
+    motor_control = MotorPID(motor=motor1, encoder=encoder, data_logger=data_logger, exp_button=exp_button)
 
     # execute the main loop for the treadmill
     try:
@@ -148,9 +148,6 @@ def main():
             # print useful information about motor speeds to terminal
             if ((print_time_stop - print_time_start) >= print_delay):
                 # print(control_sig, "|", speed_des, "|", curr_speed)
-                if exp_button.trial_started == True:
-                    elapsed_time = data_logger.det_elasped_time()
-                    data_logger.save_data(data=[elapsed_time, speed_des, curr_speed])
                 lcd.sendtoLCDThread(target="main", msg=line_2, duration=0, clr_before=False, clr_after=False)    # print the actual speeds on a delay
                 print_time_start = time.perf_counter()
 
