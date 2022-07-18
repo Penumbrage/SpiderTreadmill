@@ -13,6 +13,7 @@ from PID_Controller_Class import MotorPID
 from User_Input_Class import UserInput
 from Knob_Class import Knob
 from LCD_Class import LCD
+from Data_Collection_Class import DataLogger
 import Buttons_Class
 import Exceptions
 import RPi.GPIO as GPIO
@@ -72,11 +73,18 @@ def main():
     # Create user input object
     user_input = UserInput(input_mode='m/s')
 
+    # Create data collection object
+    data_logger = DataLogger()
+
     # Create object for the knob (requires the user_input object)
     knob = Knob(user_input=user_input, lcd=lcd, clk=18, dt=25, sw=20)
 
     # Create object for the preset speed button (requires the user_input object)
     preset_speed_button = Buttons_Class.PresetSpeedButton(button_pin=11, user_input=user_input, lcd=lcd)
+
+    # Create object for the experiment button
+    exp_button = Buttons_Class.ExperimentButton(button_pin=19, camera_pin=26, data_collector=data_logger,
+                                                        user_input=user_input, lcd=lcd)
 
     # execute the main loop for the treadmill
     try:
@@ -140,6 +148,9 @@ def main():
             # print useful information about motor speeds to terminal
             if ((print_time_stop - print_time_start) >= print_delay):
                 # print(control_sig, "|", speed_des, "|", curr_speed)
+                if exp_button.trial_started == True:
+                    elapsed_time = data_logger.det_elasped_time()
+                    data_logger.save_data(data=[elapsed_time, speed_des, curr_speed])
                 lcd.sendtoLCDThread(target="main", msg=line_2, duration=0, clr_before=False, clr_after=False)    # print the actual speeds on a delay
                 print_time_start = time.perf_counter()
 

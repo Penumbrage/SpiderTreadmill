@@ -76,7 +76,7 @@ class StartStopButton(Button):
         DESCRIPTION: Function that changes the state of the program_started variable, which is used
         to control whether or not the main function should be executed
 
-        ARGS: NONE
+        ARGS: channel (the pin number the button is attached to)
 
         RETURN: NONE
         '''
@@ -112,7 +112,7 @@ class PresetSpeedButton(Button):
         DESCRIPTION: Callback function that saves the current speed_des_mps as the preset speed for any 
         future experiments. This function also ramps the speed back down to zero.
 
-        ARGS: NONE
+        ARGS: channel (the channel number the button is attached to)
 
         RETURN: NONE
         '''
@@ -122,13 +122,91 @@ class PresetSpeedButton(Button):
             self.user_input.preset_speed_mps = self.user_input.speed_des_mps
             self.user_input.preset_speed_RPM = self.user_input.preset_speed_mps*(60/pi)/(2/39.3701)
 
-            # send the motor back to zero velocity (in preparation for any trials with the preset speed)
-            self.user_input.speed_des_mps = 0
-            self.user_input.speed_des_RPM = 0
-            self.user_input.user_changed_velocity = True        # allows the system to ramp the speed down
+        # send the motor back to zero velocity (in preparation for any trials with the preset speed)
+        self.user_input.sendSpeedToZero()
 
         # send message to LCD and terminal notifying of preset speed update
         msg="Preset speed of:\n%.2f m/s" % self.user_input.preset_speed_mps
         print(msg)
         self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
         
+class ExperimentButton(Button):
+    '''
+    DESCRIPTION: This class is based off the base button class and contains various
+    functions that allow the user to start an experiment (which the starts data collection
+    and triggers an external high speed camera) and then stop the experiment when the user
+    desires to.
+
+    ARGS: button_pin (the pin that the button is attached to), camera_pin (the pin the camera will
+    be attached to), data_collector (object from the Data_Collection_Class), user_input (object
+    of the User_Input_Class), lcd (object of the LCD_Class)
+    '''
+
+    def __init__(self, button_pin, camera_pin, data_collector, user_input, lcd):
+        # initializaition function for the StartStopButton class
+
+        # obtain original init function
+        super().__init__(button_pin)
+
+        self.camera_pin = camera_pin            # pin that will trigger the camera to start when the button is pressed
+        self.trial_started = False              # boolean flag that indicates whether a trial is started or not
+        self.data_collector = data_collector    # allow access to the data_collector object to create csv files
+        self.user_input = user_input            # allow access to the user_input object to allow the button to change speeds
+        self.lcd = lcd                          # allow access to the lcd object to print important messages to the LCD
+
+        # set up camera pin to be default low (safer)
+        GPIO.setup(camera_pin, GPIO.OUT, initial=GPIO.LOW)
+
+        # set up the button as an interrupt
+        GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__start_stop_experiment, bouncetime=100)
+
+    def __start_stop_experiment(self, channel):
+        '''
+        DESCRIPTION: Callback function that starts/stops an experiment (triggers a boolean flag that indicates
+        the trial has started or stopped, triggers the camera, and creates a new file to save data to)
+
+        ARGS: channel (the pin number the button is attached to)
+
+        RETURN: NONE
+        '''
+
+        # First trigger a change in the experiment boolean flag
+        self.trial_started = not self.trial_started
+
+        # if the experiment has started, perform the following
+        if self.trial_started == True:
+            # trigger the camera by setting the GPIO to HIGH
+            GPIO.output(self.camera_pin, GPIO.HIGH)
+
+            # create a new file to store data
+            self.data_collector.create_new_file()
+
+            # set the start time for data collected
+            self.data_collector.set_start_time()
+
+            # update the desired speeds with the preset speeds
+            with self.user_input.speed_des_lock:
+                self.user_input.speed_des_mps = self.user_input.preset_speed_mps
+                self.user_input.speed_des_RPM = self.user_input.speed_des_mps*(60/pi)/(2/39.3701)
+                self.user_input.user_changed_velocity = True            # flag used to indicate speed should be ramped
+
+            # print important messages to the terminal and the LCD
+            print("\nExperiment started")
+            print("To spd: %.2f" % self.user_input.preset_speed_mps)
+            msg = "Trial started\nTo spd: %.2f" % self.user_input.preset_speed_mps
+            self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
+        
+        # if the user has stopped the experiment, execute the following
+        elif self.trial_started == False:
+            # reset the camera pin
+            GPIO.output(self.camera_pin, GPIO.LOW)
+
+            # NOTE: the file automatically closes after every line is saved
+
+            # send the speed back to zero
+            self.user_input.sendSpeedToZero()
+
+            # print important messages to the terminal and LCD
+            print("\nExperiment stopped")
+            msg = "Trial stopped"
+            self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
