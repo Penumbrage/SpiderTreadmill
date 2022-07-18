@@ -15,5 +15,6 @@ setup(name='motor_PID_package',
       url='https://github.com/Animal-Inspired-Motion-And-Robotics-Lab/SpiderTreadmill',
       install_requires=['adafruit-blinka', 'adafruit-circuitpython-charlcd', 'single_tb9051ftg_rpi'],
       py_modules=['Encoder_Class', 'Exceptions', 'IR_Break_Beam_Class', 'PID_Controller_Class',
-                   'User_Input_Class', 'Knob_Class', 'LCD_Class', 'Buttons_Class'],
+                   'User_Input_Class', 'Knob_Class', 'LCD_Class', 'Buttons_Class',
+                   'Data_Collection_Class'],
       )

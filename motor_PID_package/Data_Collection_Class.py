@@ -18,7 +18,7 @@ class DataLogger(object):
     time and speed data into a .csv file for future use (i.e. opening a new file, 
     saving data to the file, closing the file, etc.)
 
-    ARGS: TODO
+    ARGS: NONE
     '''
 
     def __init__(self):

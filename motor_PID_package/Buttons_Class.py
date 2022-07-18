@@ -208,5 +208,5 @@ class ExperimentButton(Button):
 
             # print important messages to the terminal and LCD
             print("\nExperiment stopped")
-            msg = "Trial stopped"
+            msg = "Trial stopping"
             self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
