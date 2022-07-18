@@ -69,7 +69,7 @@ class StartStopButton(Button):
         self.start_stop_lock = threading.Lock()     # lock for the program_started variable (because the main loop needs access to this variable)
 
         # setup an interrupt on the desired pin 
-        GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__start_stop_function, bouncetime=100)
+        GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__start_stop_function, bouncetime=500)
 
     def __start_stop_function(self, channel):
         '''
@@ -105,7 +105,7 @@ class PresetSpeedButton(Button):
         self.lcd = lcd                      # store the lcd object to update the lcd
 
         # setup an interrupt on the desired pin 
-        GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__set_preset_speed, bouncetime=100)
+        GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__set_preset_speed, bouncetime=500)
 
     def __set_preset_speed(self, channel):
         '''
@@ -159,7 +159,7 @@ class ExperimentButton(Button):
         GPIO.setup(camera_pin, GPIO.OUT, initial=GPIO.LOW)
 
         # set up the button as an interrupt
-        GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__start_stop_experiment, bouncetime=100)
+        GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__start_stop_experiment, bouncetime=500)
 
     def __start_stop_experiment(self, channel):
         '''

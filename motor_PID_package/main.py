@@ -84,7 +84,7 @@ def main():
                                                         user_input=user_input, lcd=lcd)
 
     # Create a PID control object
-    motor_control = MotorPID(motor=motor1, encoder=encoder, data_logger=data_logger, exp_button=exp_button)
+    motor_control = MotorPID(motor=motor1, encoder=encoder, lcd=lcd, data_logger=data_logger, exp_button=exp_button)
 
     # execute the main loop for the treadmill
     try:
