@@ -16,10 +16,11 @@ class MotorPID(object):
     encoder objects
 
     ARGS: motor (motor (not motors) object from single_tb9051_motor_driver_rpi), encoder
-    (object from Encoder_Class.py), data_logger (ojbect from the Data_Collection_Class)
+    (object from Encoder_Class.py), lcd (object from the LCD_Class), data_logger (object
+    from the Data_Collection_Class), exp_button (experiment button object from the Buttons_Class)
     '''
 
-    def __init__(self, motor, encoder, data_logger, exp_button):
+    def __init__(self, motor, encoder, lcd, data_logger, exp_button):
         # instantiation function
         
         self.motor = motor          # obtain a motor object
@@ -30,6 +31,7 @@ class MotorPID(object):
         self.time_prev = time.perf_counter()        # variable that stores the previous time for the PID loop (used to calculate deltaT)
         self.data_logger = data_logger              # access the data_logger variable in order to be able to log the speeds to the .csv file for experiments
         self.exp_button = exp_button                # access the exp_button object in order to know when to log data
+        self.lcd = lcd                              # access the lcd object in order to be able to print vital messages to the LCD module
 
     def motorPID(self, desired_vel, meas_vel):
         '''
@@ -167,7 +169,7 @@ class MotorPID(object):
             time_elapsed = stop_time - start_time
 
             # save data if necessary
-            if self.exp_button.trial_started == True:
+            if (self.exp_button.trial_started == True) or (self.exp_button.trial_ramp_down == True):
                 # determine time elapsed
                 elapsed_time = self.data_logger.det_elasped_time()
 
@@ -183,6 +185,16 @@ class MotorPID(object):
 
         user_changed_velocity = False
         print("Ramp completed")
+
+        # reset the trial_ramp_down flag and print out necessary messages
+        if (self.exp_button.trial_ramp_down == True):
+            # reset flag
+            self.exp_button.trial_ramp_down = False
+
+            # print trial ended messages
+            print("\nExperiment stopped")
+            msg = "Trial stopping"
+            self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
 
         return control_sig, curr_speed, user_changed_velocity          # return final control signal and motor velocity and flag
 

@@ -150,6 +150,7 @@ class ExperimentButton(Button):
 
         self.camera_pin = camera_pin            # pin that will trigger the camera to start when the button is pressed
         self.trial_started = False              # boolean flag that indicates whether a trial is started or not
+        self.trial_ramp_down = False            # boolean flag used to notify the PID_Controller_Class to save data when the system is ramping down
         self.data_collector = data_collector    # allow access to the data_collector object to create csv files
         self.user_input = user_input            # allow access to the user_input object to allow the button to change speeds
         self.lcd = lcd                          # allow access to the lcd object to print important messages to the LCD
@@ -198,7 +199,10 @@ class ExperimentButton(Button):
         
         # if the user has stopped the experiment, execute the following
         elif self.trial_started == False:
-            # reset the camera pin
+            # update the ramp_down flag to save data as the speed is ramping back to zero
+            self.trial_ramp_down = True
+
+            # reset the camera pin (NOTE: the camera is based on a rising or falling edge and has a time out)
             GPIO.output(self.camera_pin, GPIO.LOW)
 
             # NOTE: the file automatically closes after every line is saved
@@ -206,7 +210,9 @@ class ExperimentButton(Button):
             # send the speed back to zero
             self.user_input.sendSpeedToZero()
 
-            # print important messages to the terminal and LCD
-            print("\nExperiment stopped")
-            msg = "Trial stopping"
-            self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
+            # NOTE: In order to save the speeds when the trial is on the "ramp down," there needs to be
+            #       an additional flag for the PID_Controller_Class that allows data to be saved to the
+            #       .csv file when the system ramps down
+
+            # NOTE: in order for the order of messages to make sense, the messages that indicate the trial
+            #       has ended are printed in the PID_Controller_Class after the ramp_down has been performed
