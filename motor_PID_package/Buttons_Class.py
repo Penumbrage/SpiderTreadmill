@@ -192,8 +192,8 @@ class ExperimentButton(Button):
 
             # print important messages to the terminal and the LCD
             print("\nExperiment started")
-            print("To spd: %.2f" % self.user_input.preset_speed_mps)
-            msg = "Trial started\nTo spd: %.2f" % self.user_input.preset_speed_mps
+            print("To spd: %.2f m/s" % self.user_input.preset_speed_mps)
+            msg = "Trial started\nTo spd: %.2f m/s" % self.user_input.preset_speed_mps
             self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
         
         # if the user has stopped the experiment, execute the following

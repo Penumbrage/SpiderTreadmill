@@ -26,8 +26,8 @@ class DataLogger(object):
         
         self.file_header = ['time_elapsed', 'desired_speed', 'actual_speed']            # header for the .csv data
         self.date_and_time = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")    # variable that stores the date and time for file names
-        self.file_path = ""                                                     # variable that stores the file path to save the data to
-        self.logs_path = ""                                                     # variable that stores the path for the data logs
+        self.file_path = ''                                                     # variable that stores the file path to save the data to
+        self.logs_path = ''                                                     # variable that stores the path for the data logs
         self.start_time = time.perf_counter()                                   # start time for the experiment
 
         # create a data_logs directory if it does not already exits
@@ -47,7 +47,7 @@ class DataLogger(object):
         curr_path = os.path.dirname(os.path.abspath(__file__))
 
         # Append the data_logs directory to the current path
-        self.logs_path = curr_path + '\\data_logs\\'
+        self.logs_path = curr_path + '/data_logs/'
 
         # Check if the data_logs directory already exists and create the directory if it doesn't
         path_exists = os.path.exists(self.logs_path)
@@ -55,7 +55,7 @@ class DataLogger(object):
         if not path_exists:
             # Create a new directory because it does not exist 
             os.makedirs(self.logs_path)
-            print("Building data_logs directory")
+            print("\nBuilding data_logs directory")
 
     def create_new_file(self):
         '''
@@ -68,10 +68,10 @@ class DataLogger(object):
         '''
 
         # First get the date and time for the file name (in the form of a string)
-        self.date_and_time = datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p")
+        self.date_and_time = datetime.now().strftime('%Y_%m_%d-%I_%M_%S_%p')
 
         # Create the file path to save to
-        self.file_path = self.logs_path + self.date_and_time + ".csv"
+        self.file_path = self.logs_path + self.date_and_time + '.csv'
 
         # Open the file and save the header to the file (the 'with' command eliminates the requirement to use file.close())
         with open(self.file_path, 'w+', encoding='UTF8', newline='') as f:
@@ -125,5 +125,4 @@ class DataLogger(object):
 
         elapsed_time = current_time - self.start_time
 
-        return elapsed_time   
- 
+        return elapsed_time
