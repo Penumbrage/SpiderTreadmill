@@ -1,0 +1,15 @@
+[Unit]
+Description=Treadmill_Service
+After=multi-user.target
+
+[Service]
+Type=idle
+
+User=pi
+ExecStart=/usr/bin/python3 /home/pi/Documents/SpiderTreadmill/motor_PID_package/main.py
+
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

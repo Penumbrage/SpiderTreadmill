@@ -18,7 +18,6 @@ class Knob(object):
     to ensure continuity between the speed dictated by this encoder and the
     speed dictated by the user inputs from the terminal, it is necessary to
     pass in a UserInput object.
-
     ARGS: user_input (object from User_Input_Class.py), lcd (LCD pin on encoder),
     clk (clock pin on encoder), dt (direction pin on encoder), sw (switch pin on encoder)
     '''
@@ -50,9 +49,7 @@ class Knob(object):
     def __clkClicked(self, channel):
         '''
         DESCRIPTION: Callback function to be called whenever the clk pin is triggered with a falling signal.
-
         ARGS: channel (pin number for the clk pin)
-
         RETURN: NONE
         '''
 
@@ -73,9 +70,7 @@ class Knob(object):
     def __dtClicked(self, channel):
         '''
         DESCRIPTION: Callback function to be called when the dt pin is triggered with a falling signal
-
         ARGS: channel (pin number for the dt pin)
-
         RETURN: NONE
         '''
 
@@ -96,9 +91,7 @@ class Knob(object):
     def __swClicked(self, channel):
         '''
         DESCRIPTION: Callback function that is called whenever the switch is pressed (used to update the increment size)
-
         ARGS: channel (pin number for the sw pin)
-
         RETURN: NONE
         '''
 
@@ -115,3 +108,4 @@ class Knob(object):
             self.step_size = 0.1
             msg = "Curr step size:\n0.1 m/s"
             self.lcd.sendtoLCDThread(target="knob", msg=msg, duration=2, clr_before=True, clr_after=True)
+            

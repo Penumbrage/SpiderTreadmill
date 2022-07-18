@@ -13,55 +13,72 @@ from PID_Controller_Class import MotorPID
 from User_Input_Class import UserInput
 from Knob_Class import Knob
 from LCD_Class import LCD
+import Buttons_Class
 import Exceptions
 import RPi.GPIO as GPIO
 import time
 import board
 import digitalio
 
-# print start statement for the program to the terminal
-print("Program starting")
+# Create a StartStopButton object which will be used to start/stop the main function via a service
+start_button = Buttons_Class.StartStopButton(button_pin=9)
 
-# ---------------- Create various objects required for the script --------------------- #
-# Create the LCD object for the LCD screen (requires some setup with the input pins)
-# Size of the LCD
-lcd_columns = 16
-lcd_rows = 2
+def main():
+    '''
+    DESCRIPTION: main function that executes the treadmill script
 
-# pin definitions for the LCD
-lcd_rs = digitalio.DigitalInOut(board.D2)
-lcd_en = digitalio.DigitalInOut(board.D3)
-lcd_d4 = digitalio.DigitalInOut(board.D17)
-lcd_d5 = digitalio.DigitalInOut(board.D27)
-lcd_d6 = digitalio.DigitalInOut(board.D22)
-lcd_d7 = digitalio.DigitalInOut(board.D10)
+    ARGS: NONE
 
-# Initialise the lcd class
-lcd = LCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6,
-                                      lcd_d7, lcd_columns, lcd_rows)
+    RETURN: NONE
+    '''
 
-# Create the Motor and Motors objects
-motor1 = Motor(pwm1_pin=12, pwm2_pin=13, en_pin=4, enb_pin=5, diag_pin=6)
-motors = Motors(motor1)
+    # pass in the start_button as a global variable
+    global start_button
 
-# Create an encoder object
-encoder = Encoder(ENCA=23, ENCB=24)
+    # print start statement for the program to the terminal
+    print("Program starting")
 
-# Create an IR break beam sensor object
-IR_sen = IRBreakBeam(beam_pin=21)
+    # ---------------- Create various objects required for the script --------------------- #
+    # Create the LCD object for the LCD screen (requires some setup with the input pins)
+    # Size of the LCD
+    lcd_columns = 16
+    lcd_rows = 2
 
-# Create a PID control object
-motor_control = MotorPID(motor=motor1, encoder=encoder)
+    # pin definitions for the LCD
+    lcd_rs = digitalio.DigitalInOut(board.D2)
+    lcd_en = digitalio.DigitalInOut(board.D3)
+    lcd_d4 = digitalio.DigitalInOut(board.D17)
+    lcd_d5 = digitalio.DigitalInOut(board.D27)
+    lcd_d6 = digitalio.DigitalInOut(board.D22)
+    lcd_d7 = digitalio.DigitalInOut(board.D10)
 
-# Create user input object
-user_input = UserInput(input_mode='m/s')
+    # Initialise the lcd class
+    lcd = LCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6,
+                                        lcd_d7, lcd_columns, lcd_rows)
 
-# Create object for the knob (requires the user_input object)
-knob = Knob(user_input=user_input, lcd=lcd, clk=18, dt=25, sw=20)
+    # Create the Motor and Motors objects
+    motor1 = Motor(pwm1_pin=12, pwm2_pin=13, en_pin=4, enb_pin=5, diag_pin=6)
+    motors = Motors(motor1)
 
-# Main execution loop for the script
-if __name__ == '__main__':
+    # Create an encoder object
+    encoder = Encoder(ENCA=23, ENCB=24)
 
+    # Create an IR break beam sensor object
+    IR_sen = IRBreakBeam(beam_pin=21)
+
+    # Create a PID control object
+    motor_control = MotorPID(motor=motor1, encoder=encoder)
+
+    # Create user input object
+    user_input = UserInput(input_mode='m/s')
+
+    # Create object for the knob (requires the user_input object)
+    knob = Knob(user_input=user_input, lcd=lcd, clk=18, dt=25, sw=20)
+
+    # Create object for the preset speed button (requires the user_input object)
+    preset_speed_button = Buttons_Class.PresetSpeedButton(button_pin=11, user_input=user_input, lcd=lcd)
+
+    # execute the main loop for the treadmill
     try:
         # print start message and current step size of the knob
         msg = "Program\nstarting!"
@@ -79,6 +96,9 @@ if __name__ == '__main__':
         while True:
             # test for driver faults
             Exceptions.raiseIfFault(motors=motors)
+
+            # test to see if the user stopped the program with the button
+            Exceptions.raiseIfProgramStopped(start_stop_button=start_button)
 
             # test the break beam sensor so that it isn't broken
             Exceptions.raiseIfBeamBroken(IR_sen=IR_sen)
@@ -124,9 +144,14 @@ if __name__ == '__main__':
                 print_time_start = time.perf_counter()
 
     except KeyboardInterrupt:
+        # print stop messages
         print("\nKeyboard Interrupt")
         msg = "Program stopped!"
         lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=False)
+
+        # reset the program_start variable
+        with start_button.start_stop_lock:
+            start_button.program_started = False
 
         # slow the motor down so that it does not stop abruptly
         speed_des = 0
@@ -135,23 +160,53 @@ if __name__ == '__main__':
         # add delay to allow the message to print the LCD screen
         time.sleep(0.2)
 
+    except Exceptions.ProgramStopped as p:
+        # print stop messages
+        msg = "Program stopped!"
+        print("\n" + msg)
+        lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=False)
+
+        # reset the program_start variable
+        with start_button.start_stop_lock:
+            start_button.program_started = False
+
+        # slow the motor down to a halt
+        speed_des = 0
+        motor_control.changeMotorVelocity(ramp_time=2, speed_des=speed_des)
+
+        # add delay to allow exception to print to LCD
+        time.sleep(0.2)
+
     except Exceptions.DriverFault as e:
+        # print messages
         print("\nDriver %s fault!" % e.driver_num)
         msg = ("Driver %s fault!" % e.driver_num)
         lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=False)
-        time.sleep(0.2)        # add delay to allow fault to print to LCD
+
+        # reset the program_started variable
+        with start_button.start_stop_lock:
+            start_button.program_started = False
+
+        # add delay to allow fault to print to LCD
+        time.sleep(0.2)
 
     except Exceptions.BeamFault as b:
+        # print messages
         print(f"\nIR sensor on pin {b.pin_num} is broken or has been triggered!")
         msg = ("IR %s triggered!" % b.pin_num)
         lcd.sendtoLCDThread(target="main", msg=msg, duration=0, clr_before=True, clr_after=False)
         print("Motor shutting down!")
+
+        # reset the program_started variable
+        with start_button.start_stop_lock:
+            start_button.program_started = False
 
         # slow the motor down to a halt
         speed_des = 0
         motor_control.changeMotorVelocity(ramp_time=2, speed_des=speed_des)
 
         # add delay to allow message to print to LCD screen
+        time.sleep(0.2)
 
     finally:
         GPIO.cleanup()
@@ -159,3 +214,20 @@ if __name__ == '__main__':
         motors.forceStop()
         print("Motors stopped")
         print("Program exited")
+
+
+# Execute the main function
+if __name__ == '__main__':
+    # Execute an infinite loop that runs as a background service
+
+    while True:
+        # get the state for the start_stop button (to see if we should start the main program)
+        with start_button.start_stop_lock:
+            program_started = start_button.program_started
+    
+        if program_started == True:
+            # only execute the main program if the start button has been pressed
+            main()  
+
+            # break out of the while loop (the service will restart the entire script)
+            break     
