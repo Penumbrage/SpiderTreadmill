@@ -22,7 +22,7 @@ import board
 import digitalio
 
 # Create a StartStopButton object which will be used to start/stop the main function via a service
-start_button = Buttons_Class.StartStopButton(button_pin=9)
+start_button = Buttons_Class.StartStopButton(button_pin=17)
 
 def main():
     '''
@@ -46,26 +46,26 @@ def main():
     lcd_rows = 2
 
     # pin definitions for the LCD
-    lcd_rs = digitalio.DigitalInOut(board.D2)
-    lcd_en = digitalio.DigitalInOut(board.D3)
-    lcd_d4 = digitalio.DigitalInOut(board.D17)
-    lcd_d5 = digitalio.DigitalInOut(board.D27)
-    lcd_d6 = digitalio.DigitalInOut(board.D22)
-    lcd_d7 = digitalio.DigitalInOut(board.D10)
+    lcd_rs = digitalio.DigitalInOut(board.D9)
+    lcd_en = digitalio.DigitalInOut(board.D11)
+    lcd_d4 = digitalio.DigitalInOut(board.D8)
+    lcd_d5 = digitalio.DigitalInOut(board.D7)
+    lcd_d6 = digitalio.DigitalInOut(board.D5)
+    lcd_d7 = digitalio.DigitalInOut(board.D6)
 
     # Initialise the lcd class
     lcd = LCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6,
                                         lcd_d7, lcd_columns, lcd_rows)
 
     # Create the Motor and Motors objects
-    motor1 = Motor(pwm1_pin=12, pwm2_pin=13, en_pin=4, enb_pin=5, diag_pin=6)
+    motor1 = Motor(pwm1_pin=12, pwm2_pin=13, en_pin=19, enb_pin=16, diag_pin=26)
     motors = Motors(motor1)
 
     # Create an encoder object
-    encoder = Encoder(ENCA=23, ENCB=24)
+    encoder = Encoder(ENCA=20, ENCB=21)
 
     # Create an IR break beam sensor object
-    IR_sen = IRBreakBeam(beam_pin=21)
+    IR_sen = IRBreakBeam(beam_pin=18)
 
     # Create user input object
     user_input = UserInput(input_mode='m/s')
@@ -74,13 +74,13 @@ def main():
     data_logger = DataLogger()
 
     # Create object for the knob (requires the user_input object)
-    knob = Knob(user_input=user_input, lcd=lcd, clk=18, dt=25, sw=20)
+    knob = Knob(user_input=user_input, lcd=lcd, clk=2, dt=3, sw=4)
 
     # Create object for the preset speed button (requires the user_input object)
-    preset_speed_button = Buttons_Class.PresetSpeedButton(button_pin=11, user_input=user_input, lcd=lcd)
+    preset_speed_button = Buttons_Class.PresetSpeedButton(button_pin=27, user_input=user_input, lcd=lcd)
 
     # Create object for the experiment button
-    exp_button = Buttons_Class.ExperimentButton(button_pin=19, camera_pin=26, data_collector=data_logger,
+    exp_button = Buttons_Class.ExperimentButton(button_pin=22, camera_pin=26, data_collector=data_logger,
                                                         user_input=user_input, lcd=lcd)
 
     # Create a PID control object
@@ -124,7 +124,7 @@ def main():
 
                 # print message that the speed is ramping
                 print("Ramping speed to: %.2f m/s" % des_spd_mps)
-                msg = "Ramping speed to:\n%.2f m/s" % des_spd_mps
+                msg = "Ramping speed\nto: %.2f m/s" % des_spd_mps
                 lcd.sendtoLCDThread(target="main", msg=msg, duration=5, clr_before=True, clr_after=True)
 
                 # change the motor velocity
