@@ -8,7 +8,7 @@
 from setuptools import setup
 
 setup(name='motor_PID_package',
-      version='1.0.0',
+      version='1.0.1',
       description=('Librairy containing all the different modules '
                     'required to operate a DC motor with PID'),
       author='William Wang',
