@@ -24,12 +24,12 @@ lcd_rows = 2
 
 # compatible with all versions of RPI as of Jan. 2019
 # v1 - v3B+
-lcd_rs = digitalio.DigitalInOut(board.D2)
-lcd_en = digitalio.DigitalInOut(board.D3)
-lcd_d4 = digitalio.DigitalInOut(board.D17)
-lcd_d5 = digitalio.DigitalInOut(board.D27)
-lcd_d6 = digitalio.DigitalInOut(board.D22)
-lcd_d7 = digitalio.DigitalInOut(board.D10)
+lcd_rs = digitalio.DigitalInOut(board.D9)
+lcd_en = digitalio.DigitalInOut(board.D11)
+lcd_d4 = digitalio.DigitalInOut(board.D8)
+lcd_d5 = digitalio.DigitalInOut(board.D7)
+lcd_d6 = digitalio.DigitalInOut(board.D5)
+lcd_d7 = digitalio.DigitalInOut(board.D6)
 
 
 # Initialise the lcd class

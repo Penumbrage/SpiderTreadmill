@@ -7,7 +7,7 @@ import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
 # Identify the button pin
-BUTTON_PIN = 9
+BUTTON_PIN = 17
 
 # Set the button pin to be an input that is pulled down
 GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)

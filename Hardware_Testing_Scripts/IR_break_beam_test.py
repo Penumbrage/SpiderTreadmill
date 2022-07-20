@@ -8,7 +8,7 @@ import time
 GPIO.setmode(GPIO.BCM)
 
 # define the pin for the IR receiver
-BEAM_RECEIVER = 21
+BEAM_RECEIVER = 18
 
 # set up the pin to as in input with resister pulled up HI
 GPIO.setup(BEAM_RECEIVER, GPIO.IN, pull_up_down=GPIO.PUD_UP)

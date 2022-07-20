@@ -80,7 +80,7 @@ def main():
     preset_speed_button = Buttons_Class.PresetSpeedButton(button_pin=27, user_input=user_input, lcd=lcd)
 
     # Create object for the experiment button
-    exp_button = Buttons_Class.ExperimentButton(button_pin=22, camera_pin=26, data_collector=data_logger,
+    exp_button = Buttons_Class.ExperimentButton(button_pin=22, camera_pin=10, data_collector=data_logger,
                                                         user_input=user_input, lcd=lcd)
 
     # Create a PID control object

@@ -46,7 +46,7 @@ With the motor driver library now installed, it is now necessary to install the 
 
 ### Important directories/files
 
-The `SpiderTreadmill` repository includes several useful scripts. Within the `Hardware_Testing_Scripts` directory, there are various scripts used to test different hardware to verify they are working properly. For example, `single-tb9051ftg-motor-driver-rpi` includes an example script to test the motor driver and the motor conditions. Because there are some legacy components that are not used within the current iteration of the treadmill, `encoder_knob_test.py, IR_break_beam_test.py, LCD_module_test.py` and `motor_test.py` are the modules you should take a closer look at.
+The `SpiderTreadmill` repository includes several useful scripts. Within the `Hardware_Testing_Scripts` directory, there are various scripts used to test different hardware to verify they are working properly. For example, `single-tb9051ftg-motor-driver-rpi` includes an example script to test the motor driver and the motor conditions. Because there are some legacy components that are not used within the current iteration of the treadmill, `encoder_knob_test.py, IR_break_beam_test.py, LCD_module_test.py, button_test.py` and `motor_test.py` are the modules you should take a closer look at.
 
 The actual code used to run the main loop to run the treadmill is located within the `motor_PID_package` directory, named as `main.py`. To run this code, just run the following lines when you are in the directory:
 

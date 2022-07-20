@@ -11,9 +11,9 @@ pressed = False #button pressed state
 GPIO.setmode(GPIO.BCM)
 
 #set up the pins we have been using
-clk = 18
-dt = 25
-sw = 20
+clk = 2
+dt = 3
+sw = 4
 
 #set up the GPIO events on those pins
 GPIO.setup(clk, GPIO.IN, pull_up_down=GPIO.PUD_UP)
