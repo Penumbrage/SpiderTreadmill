@@ -40,7 +40,7 @@ The username is included when trying to SSH into the Pi, usually in the followin
 If you are running a Linux platform, SSH is directly available via the command prompt using the following command:
 
 ```
-ssh pi@ip_address,
+ssh pi@ip_address
 ```
 
 where `ip_address` represents the IP address given to the Raspberry Pi from the router it is connected to.
