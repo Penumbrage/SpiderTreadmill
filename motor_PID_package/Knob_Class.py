@@ -37,8 +37,8 @@ class Knob(object):
         GPIO.setmode(GPIO.BCM)
 
         # set the clk, dt, and sw pins as inputs
-        GPIO.setup(clk, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(dt, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(clk, GPIO.IN)
+        GPIO.setup(dt, GPIO.IN)
         GPIO.setup(sw, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
         #set up the interrupts for each pin
