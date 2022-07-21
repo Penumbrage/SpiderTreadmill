@@ -12,6 +12,53 @@ From update 1.0.1, new functionalities have been added to the original functions
 
 ## Getting Started
 
+### Connecting to the Raspberry Pi
+
+This project is currently using a Raspberry Pi Zero 2 W in headless mode. Because the Raspberry Pi is running in a headless configuration, it is necessary to SSH into the Raspberry Pi due to the fact there is no HDMI monitor available to login to the Raspberry Pi. There are various programs that allow you to access the Raspberry Pi via SSH, which will be discussed below. 
+
+In addition to the software used to SSH into the Raspberry Pi, it is also necessary to determine the IP address given to the Raspberry Pi when it connects to a network. A tutorial on how to scan your current network is available via this [link](https://www.pcwdld.com/how-to-scan-network-for-ip-addresses#wbounce-modal). 
+
+Personally, I have found that using [Angry IP Scanner](https://angryip.org/) to work well for this task because scanning across you network IP with this software reveals the hostnames for the different devices, which can help you determine the IP address of the Raspberry Pi out of all the IP addresses connected to your router.
+
+#### Network for the Raspberry Pi
+
+For the AIM-RL lab, note that the Raspberry Pi is currently configured to automatically connect to the AIM-RL network. Therefore, in order to connect to the Raspberry Pi, it is necessary for you to connect to AIM-RL internet before attempting to SSH the Raspberry Pi. After scanning the AIM-RL network for the IP address the Raspberry Pi, follow the instructions below to determine how to SSH into the Pi with the IP address.
+
+#### Password for the Raspberry Pi
+
+For the Raspberry Pi connected to the treadmill, the following are the login credentials:
+
+```
+username: pi
+password: spidertreadmill
+```
+
+The username is included when trying to SSH into the Pi, usually in the following form `pi@ip_address_of_the_pi`. The password will be prompted when attempting the SSH.
+
+#### Linux OS
+
+If you are running a Linux platform, SSH is directly available via the command prompt using the following command:
+
+```
+ssh pi@ip_address,
+```
+
+where `ip_address` represents the IP address given to the Raspberry Pi from the router it is connected to.
+
+#### Windows
+
+Using SSH on Windows platforms is not as straightforward as using it on Linux, but there are third-party softwares that allow you to SSH into the Raspberry Pi. The following list are some options:
+
+1. [PuTTY](https://www.putty.org/)
+2. [Ubuntu on Windows](https://ubuntu.com/tutorials/install-ubuntu-on-wsl2-on-windows-10#1-overview)
+3. [SSH using a VS Code extension](https://code.visualstudio.com/docs/remote/ssh-tutorial)
+
+As long as you have the IP address of the Raspberry Pi, using any of the above softwares should allow you connect to the Raspberry Pi via SSH.
+
+#### Mac OS
+
+Personally, I have not used Mac OS to SSH into the Raspberry Pi, but there are plenty of tutorials on how to use SSH with Mac OS online, such as this [link](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-6-using-ssh/using-ssh-on-a-mac-or-linux).
+
 ### Installation
 
 In order to run the various scripts within repository, it is necessary to perform some initial installation of various required dependencies.
@@ -44,9 +91,19 @@ sudo pip install -r requirements.txt
 
 With the motor driver library now installed, it is now necessary to install the PID libraries to run the controller. Find the `motor_PID_package` directory in the root directory and enter that directory. Within the directory, run the same installation command as above `sudo pip install .`. Once again, the dependencies should install automatically, but if there are errors, there has been a requirements.txt file included within this directory as well.
 
+### Current location of the SpiderTreadmill directory
+
+If you are using the Raspberry Pi connected to the treadmill, there is a pre-built version of the `SpiderTreadmill` directory with all the neccessary libraries and dependencies already install. After logging into the Raspberry Pi, you should be automatically be directed to the `/home/pi` directory, which is the directory for the `pi` user. Within this directory, the `SpiderTreadmill` directory is located in the `Documents` directory, so the following commands will lead you directly into the `SpiderTreadmill` directory.
+
+```
+cd Documents/SpiderTreadmill
+```
+
 ### Important directories/files
 
 The `SpiderTreadmill` repository includes several useful scripts. Within the `Hardware_Testing_Scripts` directory, there are various scripts used to test different hardware to verify they are working properly. For example, `single-tb9051ftg-motor-driver-rpi` includes an example script to test the motor driver and the motor conditions. Because there are some legacy components that are not used within the current iteration of the treadmill, `encoder_knob_test.py, IR_break_beam_test.py, LCD_module_test.py, button_test.py` and `motor_test.py` are the modules you should take a closer look at.
+
+The `PID_Testing_Scripts` directory contains some scripts of the initial revision regarding the PID controller for the DC motor. Note that these scripts are extremely out-of-date compared to the scripots in the `motor_PID_package`, but it may be useful to take a look at these scripts if you want to see how the PID controller works in a chronological sense.
 
 The actual code used to run the main loop to run the treadmill is located within the `motor_PID_package` directory, named as `main.py`. To run this code, just run the following lines when you are in the directory:
 
@@ -54,7 +111,26 @@ The actual code used to run the main loop to run the treadmill is located within
 python main.py
 ```
 
-This directory also contains various other scripts that contain classes which operate the individual equipment for the treadmill, such as classes for the motor encoder in `Encoder_Class.py` or classes for the LCD module in `LCD_Class.py`.
+This directory also contains various other scripts that contain classes which operate the individual equipment for the treadmill, such as classes for the motor encoder in `Encoder_Class.py` or classes for the LCD module in `LCD_Class.py`. Most of the functionality for the treadmill components are located within these scripts, so please take a look at them in order to gain an understanding regarding how every component works together. The following list is a brief description of the purpose of all these scripts:
+
+* `Buttons_Class.py`: contains classes that describe the functionality of the push buttons
+* `Data_Collection_Class.py`: contains a class that deals with the different functions regarding collecting data into a .csv file
+* `Encoder_Class.py`: contains a class that contains functions which operate the encoder included on the DC motor
+* `Exceptions.py`: contains classes that call up various exceptions for the main execution loop (i.e. when the motor driver faults, or something trips the IR sensor)
+* `IR_Break_Beam_Class.py`: contains the class that deals with the functionality of the IR sensors
+* `Knob_Class.py`: contains the class which works with the encoder knob that is used to adjust the speed of the treadmill
+* `LCD_Class.py`: contains the class that deals with the functions of the LCD module
+* `PID_Controller_Class.py`: contains the class that runs the PID controller for the DC motor
+* `User_Input_Class.py`: contains the class that deals with various user input functions (i.e. threads that operate the terminal inputs, variables that store the desired speed, etc.)
+* `main.py`: the main script for the treadmill
+
+#### Miscellaneous files
+
+The following are some extra files in the `motor_PID_package` that don't have direct influence of the functionality of the treadmill, but deal with the meta data of the package itself.
+
+* `requirements.txt`: contains the dependencies for the `motor_PID_package`
+* `setup.py`: the setup script for the `motor_PID_package` (this allows for the pip install functionality)
+* `treadmill.service`: a file used to run `main.py` as a background service on the Raspberry Pi, which allows for the user to use the treadmill without even logging in
 
 ## Features of the main loop
 
@@ -69,11 +145,11 @@ As mentioned above, the treadmill can be run via the `main.py` module. The follo
 
 ## Using the buttons (Headless operation)
 
-Since update 1.0.1, three new buttons have been incorporated with the treadmill. There are two major purposes for including these buttons: 1) allow the user to use the treadmill without needing to ssh into the Raspberry Pi, 2) allow the user to perform experiments with the treadmill. 
+Since update 1.0.1, three new buttons have been incorporated with the treadmill. There are two major purposes for including these buttons: 1) allow the user to use the treadmill without needing to SSH into the Raspberry Pi, 2) allow the user to perform experiments with the treadmill. 
 
 ### Button 1
 
-The first button allows the user to use the treadmill without needing to ssh into the Raspberry Pi. By default, when the Raspberry Pi is powered, it will be running in an "idle" mode. The first button, when pressed, will start the main loop in `main.py` and will allow the user to change the motor speed values via the encoder knob. Pressing this button again will shut the main script down. 
+The first button allows the user to use the treadmill without needing to SSH into the Raspberry Pi. By default, when the Raspberry Pi is powered, it will be running in an "idle" mode (for those interested, the idle mode is due to the `main.py` script running as a background service on the Raspberry Pi). The first button, when pressed, will start the main loop in `main.py` and will allow the user to change the motor speed values via the encoder knob. Pressing this button again will shut the main script down. 
 
 ### Button 2 and 3
 
@@ -101,7 +177,7 @@ NOTES:
 
 ## Library reference
 
-Most of the functionality of the treadmill, LCD, IR sensors, etc. are contained within the `*Class.py` scripts in  `motor_PID_package` directory. The code has been pretty well documented, so please refer to those directories regarding any of the functionalities of the main script.
+Most of the functionality of the treadmill, LCD, IR sensors, etc. are contained within the `*Class.py` scripts in `motor_PID_package` directory. The code has been pretty well documented, so please refer to those directories regarding any of the functionalities of the main script.
 
 ## Version history
 
