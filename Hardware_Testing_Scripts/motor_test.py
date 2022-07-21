@@ -6,7 +6,7 @@ from User_Input_Class import UserInput
 import Exceptions
 
 # Create the Motor and Motors objects
-motor1 = Motor(pwm1_pin=12, pwm2_pin=13, en_pin=4, enb_pin=5, diag_pin=6)
+motor1 = Motor(pwm1_pin=12, pwm2_pin=13, en_pin=19, enb_pin=16, diag_pin=26)
 motors = Motors(motor1)
 
 # Creat UserInput object to allow the user to change the PWM values

@@ -156,3 +156,18 @@ class UserInput(object):
 
         except queue.Empty:
             pass
+
+    def sendSpeedToZero(self):
+        '''
+        DESCRIPTION: Function that sends the motor speed to zero (useful if the user wants to reset
+        the system)
+
+        ARGS: NONE
+
+        RETURN: NONE
+        '''
+
+        with self.speed_des_lock:
+            self.speed_des_mps = 0
+            self.speed_des_RPM = 0
+            self.user_changed_velocity = True        # allows the system to ramp the speed down

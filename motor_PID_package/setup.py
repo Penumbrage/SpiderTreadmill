@@ -8,12 +8,13 @@
 from setuptools import setup
 
 setup(name='motor_PID_package',
-      version='1.0.0',
+      version='1.0.1',
       description=('Librairy containing all the different modules '
                     'required to operate a DC motor with PID'),
       author='William Wang',
       url='https://github.com/Animal-Inspired-Motion-And-Robotics-Lab/SpiderTreadmill',
       install_requires=['adafruit-blinka', 'adafruit-circuitpython-charlcd', 'single_tb9051ftg_rpi'],
       py_modules=['Encoder_Class', 'Exceptions', 'IR_Break_Beam_Class', 'PID_Controller_Class',
-                   'User_Input_Class', 'Knob_Class', 'LCD_Class', 'Buttons_Class'],
+                   'User_Input_Class', 'Knob_Class', 'LCD_Class', 'Buttons_Class',
+                   'Data_Collection_Class'],
       )
