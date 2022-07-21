@@ -70,15 +70,20 @@ sleep(2)
 interface = find_interface()
 ip_address = parse_ip()
 
-while True:
+try:
+    while True:
 
-    # date and time
-    lcd_line_1 = datetime.now().strftime('%b %d  %H:%M:%S\n')
+        # date and time
+        lcd_line_1 = datetime.now().strftime('%b %d  %H:%M:%S\n')
 
-    # current ip address
-    lcd_line_2 = "IP " + ip_address
+        # current ip address
+        lcd_line_2 = "IP " + ip_address
 
-    # combine both lines into one update to the display
-    lcd.message = lcd_line_1 + lcd_line_2
+        # combine both lines into one update to the display
+        lcd.message = lcd_line_1 + lcd_line_2
 
-    sleep(1)
+        sleep(1)
+
+except KeyboardInterrupt:
+    print("\nexiting...")
+    lcd.clear()

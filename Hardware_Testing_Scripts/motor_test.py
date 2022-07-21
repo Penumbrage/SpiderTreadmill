@@ -31,10 +31,10 @@ def main():
             motors.setSpeeds(speed_des_PWM)
         
     except Exceptions.DriverFault as e:
-        print("Driver %s fault!" % e.driver_num)
+        print("\nDriver %s fault!" % e.driver_num)
 
     except KeyboardInterrupt:
-        print("Keyboard Interrupt")
+        print("\nKeyboard Interrupt")
 
     finally:
         motors.forceStop()

@@ -16,8 +16,8 @@ dt = 3
 sw = 4
 
 #set up the GPIO events on those pins
-GPIO.setup(clk, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(dt, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(clk, GPIO.IN)
+GPIO.setup(dt, GPIO.IN)
 GPIO.setup(sw, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 #get the initial states
