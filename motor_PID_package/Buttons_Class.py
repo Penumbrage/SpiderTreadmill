@@ -29,7 +29,7 @@ class Button(object):
         GPIO.setmode(GPIO.BCM)
 
         # set the button pin as input which is pulled down
-        GPIO.setup(button_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(button_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     def button_pressed(self):
         '''
@@ -45,9 +45,9 @@ class Button(object):
         button_state = GPIO.input(self.button_pin)
 
         # evaluate the state of the button and print it to the terminal
-        if button_state == True:
+        if button_state == False:
             print("The button has been pressed!")
-        elif button_state == False:
+        elif button_state == True:
             print("The button has been released!")
 
 class StartStopButton(Button):
@@ -69,7 +69,7 @@ class StartStopButton(Button):
         self.start_stop_lock = threading.Lock()     # lock for the program_started variable (because the main loop needs access to this variable)
 
         # setup an interrupt on the desired pin 
-        GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__start_stop_function, bouncetime=500)
+        GPIO.add_event_detect(button_pin, GPIO.FALLING, callback=self.__start_stop_function, bouncetime=500)
 
     def __start_stop_function(self, channel):
         '''
@@ -105,7 +105,7 @@ class PresetSpeedButton(Button):
         self.lcd = lcd                      # store the lcd object to update the lcd
 
         # setup an interrupt on the desired pin 
-        GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__set_preset_speed, bouncetime=500)
+        GPIO.add_event_detect(button_pin, GPIO.FALLING, callback=self.__set_preset_speed, bouncetime=500)
 
     def __set_preset_speed(self, channel):
         '''
@@ -159,7 +159,7 @@ class ExperimentButton(Button):
         GPIO.setup(camera_pin, GPIO.OUT, initial=GPIO.LOW)
 
         # set up the button as an interrupt
-        GPIO.add_event_detect(button_pin, GPIO.RISING, callback=self.__start_stop_experiment, bouncetime=500)
+        GPIO.add_event_detect(button_pin, GPIO.FALLING, callback=self.__start_stop_experiment, bouncetime=500)
 
     def __start_stop_experiment(self, channel):
         '''

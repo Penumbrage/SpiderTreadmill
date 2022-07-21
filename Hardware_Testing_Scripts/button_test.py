@@ -10,7 +10,7 @@ GPIO.setmode(GPIO.BCM)
 BUTTON_PIN = 17
 
 # Set the button pin to be an input that is pulled down
-GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # Define button callback function
 def button_function(channel):
@@ -18,13 +18,13 @@ def button_function(channel):
     button_state = GPIO.input(BUTTON_PIN)
 
     # determine the state and print out the respective statements
-    if button_state == True:
+    if button_state == False:
         print("The button has been pressed!")
-    elif button_state == False:
+    elif button_state == True:
         print("The button has been released!")
 
 # Add an interrupt function the pin for both rising and falling signals
-GPIO.add_event_detect(BUTTON_PIN, GPIO.BOTH, callback = button_function, bouncetime = 100)
+GPIO.add_event_detect(BUTTON_PIN, GPIO.BOTH, callback = button_function, bouncetime = 200)
 
 # Create an infinite loop to run the function
 try:
