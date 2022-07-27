@@ -147,28 +147,28 @@ As mentioned above, the treadmill can be run via the `main.py` module. The follo
 
 Since update 1.0.1, three new buttons have been incorporated with the treadmill. There are two major purposes for including these buttons: 1) allow the user to use the treadmill without needing to SSH into the Raspberry Pi, 2) allow the user to perform experiments with the treadmill. 
 
-### Button 1
+### Start/Stop button
 
-The first button allows the user to use the treadmill without needing to SSH into the Raspberry Pi. By default, when the Raspberry Pi is powered, it will be running in an "idle" mode (for those interested, the idle mode is due to the `main.py` script running as a background service on the Raspberry Pi). The first button, when pressed, will start the main loop in `main.py` and will allow the user to change the motor speed values via the encoder knob. Pressing this button again will shut the main script down. 
+The start/stop button allows the user to use the treadmill without needing to SSH into the Raspberry Pi. By default, when the Raspberry Pi is powered (as well as booted up), it will be running in an "idle" mode (for those interested, the idle mode is due to the `main.py` script running as a background service on the Raspberry Pi). This button, when pressed, will start the main loop in `main.py` and will allow the user to change the motor speed values via the encoder knob. Pressing this button again will shut the main script down. 
 
-### Button 2 and 3
+### Set speed button and trial button
 
-The second and third button are aimed to be used together and will allow the user to perform experiments with the treadmill. Suppose the user tunes the treadmill to a desired speed using the encoder knob, and they desire to perform experiments at this speed. The user can use the second button to save this speed. By pressing the second button, the Raspberry Pi saves the current desired speed on display as a "preset speed," and then slows the motor down to a stop.
+The second and third buttons are aimed to be used together and will allow the user to perform experiments with the treadmill. Suppose the user tunes the treadmill to a desired speed using the encoder knob, and they desire to perform experiments at this speed. The user can use the set speed button to save this speed. By pressing the set speed button, the Raspberry Pi saves the current desired speed on display as a "preset speed," and then slows the motor down to a stop, which prepares the treadmill for any experiments.
 
-In order to actually perform an experiment, button 3 can be used. Upon clicking button 3, the treadmill will speed up to the saved "preset speed" and maintain this speed until the button is clicked again. When button 3 is clicked to start the trial, the Raspberry Pi will automatically start saving data in the form of `[time_elapsed, desired_speed, actual_speed]` to a .csv file with a file name specified with the date and time of trial. This file is saved to directory called `data_logs` in the `motor_PID_package` directory. In addition, pressing this button will also trigger a GPIO pin, which can be used to start an external camera. 
+In order to actually perform an experiment, the trial button can be used. Upon clicking the trial button, the treadmill will speed up to the saved "preset speed" and maintain this speed until the button is clicked again, which will then stop the trial and slow the motor down to a halt. When the set speed button is clicked to start the trial, the Raspberry Pi will automatically start saving data in the form of `[time_elapsed, desired_speed, actual_speed]` to a .csv file with a file name specified with the date and time of trial. This file is saved to directory called `data_logs` in the `motor_PID_package` directory. In addition, pressing this button will also trigger a GPIO pin, which can be used to start an external camera. 
 
 ### Possible steps to a trial
 
 The following could be a series of steps the user takes to perform an experiment with the headless setup.
 
-1. Power up the Raspberry Pi
-2. Press the button 1 to start the main script
+1. Power up the Raspberry Pi and wait for it to boot up (wait until the Raspberry Pi's LED stops flickering)
+2. Press the start/stop button to start the main script
 3. Tune the treadmill to the desired speed using the encoder knob
-4. Press button 2 to save current desired speed as the preset speed for future trials (this button will also slow the treadmill to a halt)
-5. Press button 3 to start a trial (this will speed the treadmill up to the preset speed and maintain that speed)
-6. Press button 3 again when you want to stop the trial
+4. Press the set speed button to save current desired speed as the preset speed for future trials (this button will also slow the treadmill to a halt)
+5. Press the trial button to start a trial (this will speed the treadmill up to the preset speed and maintain that speed)
+6. Press the trial button again when you want to stop the trial (this will slow the motor down to a halt)
 7. Perform steps 3 - 6 for different speeds for each trial, or perform steps 5 - 6 for several trials with the same preset speed.
-8. Press button 1 to exit the main script after all desired trials have been completed
+8. Press the start/stop button to exit the main script after all desired trials have been completed
 
 NOTES:
 * The Raspberry Pi will automatically exit the main script if the IR sensors are tripped or if the motor driver faults
