@@ -64,8 +64,11 @@ def main():
     # Create an encoder object
     encoder = Encoder(ENCA=20, ENCB=21)
 
-    # Create an IR break beam sensor object
+    # Create a IR break beam sensor object
     IR_sen = IRBreakBeam(beam_pin=18)
+
+    # Create a second IR break beam object
+    IR_sen_2 = IRBreakBeam(beam_pin=23)
 
     # Create user input object
     user_input = UserInput(input_mode='m/s')
@@ -110,6 +113,9 @@ def main():
 
             # test the break beam sensor so that it isn't broken
             Exceptions.raiseIfBeamBroken(IR_sen=IR_sen)
+            
+            # test the second break beam sensor to see if it's broken
+            Exceptions.raiseIfBeamBroken(IR_sen=IR_sen_2)
 
             # attempt to get a user input if available on the queue (starts at zero speed and tries to maintain velocity)
             user_input.readUserInput()

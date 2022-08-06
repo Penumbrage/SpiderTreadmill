@@ -111,7 +111,7 @@ The actual code used to run the main loop to run the treadmill is located within
 python main.py
 ```
 
-This directory also contains various other scripts that contain classes which operate the individual equipment for the treadmill, such as classes for the motor encoder in `Encoder_Class.py` or classes for the LCD module in `LCD_Class.py`. Most of the functionality for the treadmill components are located within these scripts, so please take a look at them in order to gain an understanding regarding how every component works together. The following list is a brief description of the purpose of all these scripts:
+This directory also contains various other scripts that contain classes which operate the individual equipment for the treadmill, such as classes for the motor encoder in `Encoder_Class.py` or classes for the LCD module in `LCD_Class.py`. Most of the functionality for the treadmill components are located within these scripts, so please take a look at them in order to gain an understanding regarding how every component works together. Note that the only other important file used to run the treadmill that isn't included in the following files is the file containing the functions pertaining to the motor driver, which can be found in `single-tb9051ftg-motor-driver-rpi` as mentioned above. The following list is a brief description of the purpose of all these scripts:
 
 * `Buttons_Class.py`: contains classes that describe the functionality of the push buttons
 * `Data_Collection_Class.py`: contains a class that deals with the different functions regarding collecting data into a .csv file
